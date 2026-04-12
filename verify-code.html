@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Enter Code – NeuroFlex360</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    body { padding-bottom: 48px; }
+    .auth-header { background: var(--dark); padding: 40px 24px 28px; text-align: center; }
+    .auth-logo { font-size: 36px; margin-bottom: 14px; }
+    .auth-header h1 { font-size: 20px; font-weight: 600; color: white; margin-bottom: 4px; }
+    .auth-header p  { font-size: 13px; color: rgba(255,255,255,0.45); line-height: 1.6; }
+    .auth-card { background: var(--surface); border-radius: var(--radius); margin: 20px 16px 0; padding: 24px 20px; border: 1px solid var(--border); box-shadow: var(--shadow); }
+    .form-label { display: block; font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 6px; }
+    .code-input {
+      width: 100%; padding: 18px; text-align: center;
+      font-size: 32px; font-weight: 600; letter-spacing: 0.2em;
+      font-family: var(--mono); border: 2px solid var(--border);
+      border-radius: 12px; background: var(--bg);
+      color: var(--text); margin-bottom: 6px;
+      transition: border-color 0.2s;
+    }
+    .code-input:focus { outline: none; border-color: var(--accent); }
+    .form-hint { font-size: 12px; color: var(--muted); margin-bottom: 18px; line-height: 1.5; }
+    .btn-main { width: 100%; padding: 14px; background: var(--accent); color: var(--dark); border: none; border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer; font-family: var(--font); transition: opacity 0.2s; }
+    .btn-main:hover { opacity: 0.85; }
+    .error-msg { font-size: 12px; color: var(--red); background: #fcebeb; border-radius: 8px; padding: 10px 12px; margin-bottom: 14px; display: none; }
+    .error-msg.show { display: block; }
+    .resend-link { display: block; text-align: center; font-size: 13px; color: var(--blue); font-weight: 500; margin-top: 16px; cursor: pointer; }
+    .back-link { display: block; text-align: center; font-size: 13px; color: var(--muted); margin-top: 10px; }
+    .back-link a { color: var(--blue); }
+
+    /* Prototype notice */
+    .proto-notice {
+      background: #fff4e0;
+      border: 1px solid #ba7517;
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-bottom: 16px;
+      font-size: 12px;
+      color: #78350f;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="auth-header">
+    <div class="auth-logo">📧</div>
+    <h1>Check Your Email</h1>
+    <p id="email-hint">A 6-digit code has been sent to your email address.</p>
+  </div>
+
+  <div class="auth-card">
+
+    <!-- Prototype notice — remove this in production -->
+    <div class="proto-notice">
+      <strong>Prototype mode:</strong> In the live app, this code would be emailed to you. For now, check the browser console (F12 → Console) to find your code.
+    </div>
+
+    <div class="error-msg" id="error-msg"></div>
+
+    <label class="form-label" for="code">Enter your 6-digit code</label>
+    <input class="code-input" type="number" id="code" placeholder="000000" maxlength="6" />
+    <p class="form-hint">The code expires in 15 minutes. Check your spam folder if you don't see it.</p>
+
+    <button class="btn-main" onclick="handleVerify()">Verify Code</button>
+  </div>
+
+  <span class="resend-link" onclick="resendCode()">Resend code</span>
+  <p class="back-link"><a href="forgot-password.html">← Try a different email</a></p>
+
+  <script src="js/auth.js"></script>
+  <script>
+    // Get email from URL
+    var params = new URLSearchParams(window.location.search);
+    var email  = params.get('email') || '';
+    if (email) {
+      document.getElementById('email-hint').textContent =
+        'A 6-digit code has been sent to ' + email + '.';
+    }
+
+    document.getElementById('code').addEventListener('input', function() {
+      // Only allow digits, max 6
+      this.value = this.value.replace(/\D/g,'').slice(0,6);
+    });
+
+    function handleVerify() {
+      var entered  = document.getElementById('code').value.trim();
+      var stored   = localStorage.getItem('nf360_reset_code');
+      var expiry   = parseInt(localStorage.getItem('nf360_reset_expiry') || '0');
+      var errorEl  = document.getElementById('error-msg');
+      errorEl.classList.remove('show');
+
+      if (!entered || entered.length < 6) {
+        errorEl.textContent = 'Please enter the full 6-digit code.';
+        errorEl.classList.add('show');
+        return;
+      }
+
+      if (Date.now() > expiry) {
+        errorEl.textContent = 'This code has expired. Please request a new one.';
+        errorEl.classList.add('show');
+        return;
+      }
+
+      if (entered !== stored) {
+        errorEl.textContent = 'That code is not correct. Please check and try again.';
+        errorEl.classList.add('show');
+        return;
+      }
+
+      // Code verified — go to reset password page
+      window.location.href = 'reset-password.html';
+    }
+
+    function resendCode() {
+      window.location.href = 'forgot-password.html';
+    }
+
+    document.getElementById('code').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') handleVerify();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NeuroFlex360 – Cognitive Rehabilitation</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+  <!-- TOP HEADER -->
+  <header class="app-header">
+    <div class="header-left">
+      <div class="logo-mark">NF</div>
+      <div>
+        <p class="header-sub">Welcome back,</p>
+        <h1 class="header-name" id="header-name">Patient</h1>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="streak-badge" id="streak-badge" onclick="openStreakModal()" style="cursor:pointer;">🔥 -- day streak</div>
+    </div>
+  </header>
+
+  <!-- DAILY PROGRESS BAR -->
+  <section class="daily-progress-section">
+    <div class="dp-top">
+      <span>Today's Progress</span>
+      <span class="dp-frac">1 / 3 modules</span>
+    </div>
+    <div class="progress-track">
+      <div class="progress-fill" style="width: 33%;"></div>
+    </div>
+    <p class="dp-hint">Complete all 3 modules to finish today's session</p>
+  </section>
+
+  <!-- MODULE CARDS -->
+  <main class="modules-container">
+    <h2 class="section-label">Training Modules</h2>
+
+    <a href="pages/memory.html" class="module-card memory-card">
+      <div class="card-icon">🧠</div>
+      <div class="card-body">
+        <h3>Memory</h3>
+        <p>Card matching & pattern recall</p>
+        <div class="card-progress-bar">
+          <div class="cpb-fill" id="mem-bar" style="background: var(--blue);"></div>
+        </div>
+      </div>
+      <div class="card-score">
+        <span class="score-val blue" id="mem-score-val">--</span>
+        <span class="score-unit">/ 100</span>
+        <div id="mem-level-badge" style="font-size:10px; color:var(--muted); margin-top:3px;"></div>
+      </div>
+    </a>
+
+    <a href="pages/attention.html" class="module-card attention-card">
+      <div class="card-icon">🎯</div>
+      <div class="card-body">
+        <h3>Attention</h3>
+        <p>Number focus & visual scanning</p>
+        <div class="card-progress-bar">
+          <div class="cpb-fill" id="att-bar" style="background: var(--amber);"></div>
+        </div>
+      </div>
+      <div class="card-score">
+        <span class="score-val amber" id="att-score-val">--</span>
+        <span class="score-unit">/ 100</span>
+        <div id="att-level-badge" style="font-size:10px; color:var(--muted); margin-top:3px;"></div>
+      </div>
+    </a>
+
+    <a href="pages/reaction.html" class="module-card reaction-card">
+      <div class="card-icon">⚡</div>
+      <div class="card-body">
+        <h3>Reaction Time</h3>
+        <p>Speed testing & response training</p>
+        <div class="card-progress-bar">
+          <div class="cpb-fill" id="rt-bar" style="background: var(--green);"></div>
+        </div>
+      </div>
+      <div class="card-score">
+        <span class="score-val green" id="rt-score-val">--</span>
+        <span class="score-unit">ms</span>
+        <div id="rt-level-badge" style="font-size:10px; color:var(--muted); margin-top:3px;"></div>
+      </div>
+    </a>
+
+  </main>
+
+  <!-- BOTTOM NAV -->
+  <nav class="bottom-nav">
+    <a href="index.html" class="nav-item active">
+      <span class="nav-icon">🏠</span>
+      <span>Home</span>
+    </a>
+    <a href="pages/progress.html" class="nav-item">
+      <span class="nav-icon">📊</span>
+      <span>Progress</span>
+    </a>
+    <a href="javascript:void(0)" onclick="logoutUser()" class="nav-item">
+      <span class="nav-icon">🚪</span>
+      <span>Log Out</span>
+    </a>
+  </nav>
+
+  <script src="js/auth.js"></script>
+  <script>
+    var user = requireAuth();
+    if (user) {
+      // First-time user — send to onboarding before dashboard
+      var onboarded = localStorage.getItem('nf360_onboarded_' + user.id);
+      if (!onboarded) {
+        window.location.href = 'onboarding.html';
+      }
+      document.getElementById('header-name').textContent = user.name.split(' ')[0];
+    }
+
+    // ---- STREAK ----
+    var streakCount = getStreak();
+    var streakBadge = document.getElementById('streak-badge');
+    if (streakCount === 0) {
+      streakBadge.textContent = '🌱 Start your streak today!';
+      streakBadge.style.background = 'rgba(255,255,255,0.08)';
+      streakBadge.style.borderColor = 'rgba(255,255,255,0.15)';
+      streakBadge.style.color = 'rgba(255,255,255,0.6)';
+    } else {
+      streakBadge.textContent = '🔥 ' + streakCount + '-day streak';
+    }
+
+    function openStreakModal() {
+      var modal    = document.getElementById('streak-modal');
+      var titleEl  = document.getElementById('modal-streak-title');
+      var bodyEl   = document.getElementById('modal-streak-body');
+      var count    = getStreak();
+
+      modal.style.display = 'flex';
+
+      if (count === 0) {
+        titleEl.textContent = 'No streak yet';
+        bodyEl.textContent  = 'You have not completed a session today. Complete any training module to start your streak!';
+      } else if (count === 1) {
+        titleEl.textContent = 'Day 1 — great start!';
+        bodyEl.textContent  = 'You trained today. Come back tomorrow to keep your streak going!';
+      } else {
+        titleEl.textContent = count + '-day streak — well done!';
+        bodyEl.textContent  = 'You have trained for ' + count + ' days in a row. Keep it up — consistency is the key to cognitive improvement!';
+      }
+    }
+
+    function closeStreakModal() {
+      document.getElementById('streak-modal').style.display = 'none';
+    }
+
+    // ---- LOAD MODULE SCORES (per user) ----
+    var LABELS = { 1: 'Easy', 2: 'Medium', 3: 'Hard' };
+
+    function getLatest(module) {
+      var data    = getUserScores();
+      var entries = data[module] || [];
+      return entries.length ? entries[entries.length - 1] : null;
+    }
+
+    function getCurrentLevel(module) {
+      var data    = getUserScores();
+      var entries = data[module] || [];
+      if (entries.length < 3) return 1;
+      var recent = entries.slice(-3).map(function(e) { return e.score; });
+      var last   = entries[entries.length - 1].level || 1;
+      if (recent.every(function(s) { return s >= 75; }) && last < 3) return last + 1;
+      if (recent.every(function(s) { return s <  50; }) && last > 1) return last - 1;
+      return last;
+    }
+
+    // Memory
+    var memLatest = getLatest('memory');
+    var memLevel  = getCurrentLevel('memory');
+    if (memLatest) {
+      document.getElementById('mem-score-val').textContent = memLatest.score;
+      document.getElementById('mem-bar').style.width       = memLatest.score + '%';
+    }
+    document.getElementById('mem-level-badge').textContent = 'Lv.' + memLevel + ' ' + LABELS[memLevel];
+
+    // Attention
+    var attLatest = getLatest('attention');
+    var attLevel  = getCurrentLevel('attention');
+    if (attLatest) {
+      document.getElementById('att-score-val').textContent = attLatest.score;
+      document.getElementById('att-bar').style.width       = attLatest.score + '%';
+    }
+    document.getElementById('att-level-badge').textContent = 'Lv.' + attLevel + ' ' + LABELS[attLevel];
+
+    // Reaction
+    var rtLatest = getLatest('reaction');
+    var rtLevel  = getCurrentLevel('reaction');
+    if (rtLatest) {
+      document.getElementById('rt-score-val').textContent = rtLatest.score + 'ms';
+    }
+    document.getElementById('rt-level-badge').textContent = 'Lv.' + rtLevel + ' ' + LABELS[rtLevel];
+  </script>
+
+
+  <!-- STREAK MODAL -->
+  <div id="streak-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:999; align-items:center; justify-content:center; padding:24px;">
+    <div style="background:var(--surface); border-radius:var(--radius); padding:28px 24px; max-width:360px; width:100%; box-shadow:0 8px 32px rgba(0,0,0,0.2); position:relative;">
+      <button onclick="closeStreakModal()" style="position:absolute; top:14px; right:16px; background:none; border:none; font-size:20px; color:var(--muted); cursor:pointer;">✕</button>
+      <div style="font-size:48px; text-align:center; margin-bottom:12px;">🔥</div>
+      <h2 style="font-size:18px; font-weight:600; text-align:center; margin-bottom:8px;" id="modal-streak-title">Your Streak</h2>
+      <p style="font-size:13px; color:var(--muted); text-align:center; line-height:1.7; margin-bottom:20px;" id="modal-streak-body"></p>
+      <div style="background:var(--bg); border-radius:10px; padding:16px; border:1px solid var(--border);">
+        <p style="font-size:12px; color:var(--muted); line-height:1.7; margin:0;">
+          <strong style="color:var(--text);">What is a streak?</strong><br>
+          A streak counts how many days in a row you have completed at least one training module. 
+          Coming back every day — even for just one session — keeps your streak alive and helps your brain build lasting habits.
+          If you miss a day, your streak resets to zero, so try to train a little each day!
+        </p>
+      </div>
+      <button onclick="closeStreakModal()" class="btn-primary" style="margin-top:16px; width:100%; padding:13px;">Got it 👍</button>
+    </div>
+  </div>
+
+</body>
+</html>

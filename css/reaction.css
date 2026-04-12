@@ -1,0 +1,165 @@
+/* =========================================
+   reaction.css – Reaction Time Module Styles
+   NeuroFlex360
+   ========================================= */
+
+/* ---------- CIRCLE WRAPPER ---------- */
+.rt-circle-wrap {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 24px 0;
+}
+
+/* ---------- THE MAIN CIRCLE ---------- */
+.rt-circle {
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: 3px solid;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+  user-select: none;
+}
+
+.rt-circle:active {
+  transform: scale(0.95);
+}
+
+/* IDLE – waiting for user to start */
+.rt-circle.idle {
+  background: #f3f4f6;
+  border-color: var(--border);
+}
+
+/* WAITING – user tapped, now waiting for green signal */
+.rt-circle.waiting {
+  background: #fef3c7;
+  border-color: var(--amber);
+  animation: slowPulse 1.5s ease-in-out infinite;
+}
+
+/* READY – tap now! */
+.rt-circle.ready {
+  background: #eaf3de;
+  border-color: #639922;
+  animation: greenPop 0.25s ease;
+}
+
+/* TOO EARLY – user tapped before it turned green */
+.rt-circle.too-early {
+  background: #fcebeb;
+  border-color: var(--red);
+  animation: errorShake 0.4s ease;
+}
+
+/* Label inside the circle */
+.rt-circle-label {
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+  line-height: 1.4;
+  color: var(--text);
+  letter-spacing: 0.03em;
+}
+
+.rt-circle.ready .rt-circle-label {
+  color: #3b6d11;
+  font-size: 16px;
+}
+
+.rt-circle.too-early .rt-circle-label {
+  color: var(--red);
+}
+
+.rt-circle.waiting .rt-circle-label {
+  color: #78350f;
+}
+
+/* ---------- ANIMATIONS ---------- */
+@keyframes slowPulse {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.04); }
+  100% { transform: scale(1); }
+}
+
+@keyframes greenPop {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+@keyframes errorShake {
+  0%   { transform: translateX(0); }
+  20%  { transform: translateX(-8px); }
+  40%  { transform: translateX(8px); }
+  60%  { transform: translateX(-5px); }
+  80%  { transform: translateX(5px); }
+  100% { transform: translateX(0); }
+}
+
+/* ---------- RESULT DISPLAY (ms reading) ---------- */
+.rt-result-display {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.rt-ms {
+  display: block;
+  font-size: 48px;
+  font-weight: 600;
+  font-family: var(--mono);
+  color: var(--text);
+}
+
+.rt-ms-label {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* ---------- HISTORY BARS ---------- */
+.rt-history-section {
+  padding: 0 4px;
+}
+
+.rt-history-label {
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* Bar container — flex row, bars grow from bottom */
+.rt-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  height: 70px;
+  padding: 0 4px;
+  border-bottom: 1px solid var(--border);
+}
+
+.rt-bar {
+  flex: 1;
+  border-radius: 4px 4px 0 0;
+  min-height: 6px;
+  transition: height 0.4s ease;
+  position: relative;
+}
+
+/* Small label under each bar showing the round time */
+.rt-bar::after {
+  content: attr(data-time) 'ms';
+  position: absolute;
+  bottom: -18px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 9px;
+  color: var(--muted);
+  white-space: nowrap;
+  font-family: var(--mono);
+}

@@ -1,0 +1,98 @@
+/* =========================================
+   memory.css – Memory Module Styles
+   NeuroFlex360
+   ========================================= */
+
+.memory-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  padding: 4px;
+}
+
+/* ---------- INDIVIDUAL CARD ---------- */
+.mem-card {
+  aspect-ratio: 1 / 1;
+  border-radius: 12px;
+  border: 2px solid var(--border);
+  background: var(--dark);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.15s ease, border-color 0.2s ease;
+  user-select: none;
+}
+
+.mem-card:hover {
+  transform: scale(1.04);
+}
+
+/* Card back (default hidden state) */
+.mem-card::before {
+  content: '?';
+  font-size: 20px;
+  color: rgba(78, 204, 163, 0.5);
+  font-weight: 600;
+  font-family: var(--mono);
+}
+
+/* The emoji face — hidden by default */
+.mem-card .card-face {
+  display: none;
+  font-size: 26px;
+}
+
+/* Flipped state (temporarily revealed) */
+.mem-card.flipped {
+  background: #e8f4ff;
+  border-color: var(--blue);
+}
+
+.mem-card.flipped::before {
+  display: none;
+}
+
+.mem-card.flipped .card-face {
+  display: block;
+}
+
+/* Matched state (permanently revealed) */
+.mem-card.matched {
+  background: #eaf3de;
+  border-color: #639922;
+  cursor: default;
+  animation: matchPop 0.3s ease;
+}
+
+.mem-card.matched::before {
+  display: none;
+}
+
+.mem-card.matched .card-face {
+  display: block;
+}
+
+/* Pop animation when a match is found */
+@keyframes matchPop {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
+/* Wrong match flash */
+.mem-card.wrong-flash {
+  border-color: var(--red);
+  background: #fcebeb;
+  animation: wrongShake 0.35s ease;
+}
+
+@keyframes wrongShake {
+  0%   { transform: translateX(0); }
+  25%  { transform: translateX(-5px); }
+  75%  { transform: translateX(5px); }
+  100% { transform: translateX(0); }
+}

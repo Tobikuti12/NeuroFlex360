@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Log In – NeuroFlex360</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono&display=swap" rel="stylesheet" />
+  <style>
+    body { padding-bottom: 48px; }
+    .auth-header { background: var(--dark); padding: 52px 24px 36px; text-align: center; }
+    .auth-logo { width: 58px; height: 58px; background: var(--accent); color: var(--dark); border-radius: 16px; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 18px; margin: 0 auto 16px; }
+    .auth-header h1 { font-size: 22px; font-weight: 600; color: white; margin-bottom: 4px; }
+    .auth-header p  { font-size: 13px; color: rgba(255,255,255,0.45); }
+    .auth-card { background: var(--surface); border-radius: var(--radius); margin: 24px 16px 0; padding: 24px 20px; border: 1px solid var(--border); box-shadow: var(--shadow); }
+    .form-group { margin-bottom: 16px; }
+    .form-label { display: block; font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 6px; }
+    .form-input { width: 100%; padding: 13px 14px; border: 1.5px solid var(--border); border-radius: 10px; font-size: 14px; font-family: var(--font); color: var(--text); background: var(--bg); transition: border-color 0.2s, box-shadow 0.2s; }
+    .form-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(78,204,163,0.15); }
+    .form-input.error { border-color: var(--red); }
+    .form-input::placeholder { color: #b0b8c4; }
+    .error-msg { font-size: 12px; color: var(--red); background: #fcebeb; border-radius: 8px; padding: 10px 12px; margin-bottom: 14px; display: none; }
+    .error-msg.show { display: block; }
+    .btn-main { width: 100%; padding: 14px; background: var(--accent); color: var(--dark); border: none; border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer; font-family: var(--font); transition: opacity 0.2s; }
+    .btn-main:hover { opacity: 0.85; }
+    .divider { text-align: center; font-size: 12px; color: var(--muted); margin: 16px 0; }
+    .auth-footer { text-align: center; font-size: 13px; color: var(--muted); margin-top: 16px; }
+    .auth-footer a { color: var(--blue); font-weight: 500; }
+
+    /* Remember me row */
+    .remember-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px;
+    }
+    .remember-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+    }
+    .remember-left input[type="checkbox"] {
+      width: 18px; height: 18px;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+    .remember-left label {
+      font-size: 13px;
+      color: var(--text);
+      cursor: pointer;
+    }
+    .forgot-link {
+      font-size: 13px;
+      color: var(--blue);
+      font-weight: 500;
+      text-decoration: none;
+    }
+
+    /* Remembered name banner */
+    .remembered-banner {
+      display: none;
+      background: rgba(78,204,163,0.1);
+      border: 1px solid rgba(78,204,163,0.3);
+      border-radius: 10px;
+      padding: 10px 14px;
+      margin-bottom: 16px;
+      font-size: 13px;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .remembered-banner span { flex: 1; }
+    .remembered-banner button {
+      background: none; border: none;
+      font-size: 11px; color: var(--muted);
+      cursor: pointer; font-family: var(--font);
+      padding: 0;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="auth-header">
+    <div class="auth-logo">NF</div>
+    <h1>Welcome</h1>
+    <p>NeuroFlex360 — Cognitive Rehabilitation</p>
+  </div>
+
+  <div class="auth-card">
+
+    <!-- Remembered name banner (shows if remember me was ticked before) -->
+    <div id="remembered-banner" style="display:none; background:rgba(78,204,163,0.1); border:1px solid rgba(78,204,163,0.3); border-radius:10px; padding:10px 14px; margin-bottom:16px; font-size:13px; color:var(--text);">
+      <span>👋 Welcome <strong id="remembered-name"></strong></span>
+      <button onclick="clearRemembered()" style="float:right; background:none; border:none; font-size:11px; color:var(--muted); cursor:pointer; font-family:var(--font);">Not you?</button>
+    </div>
+
+    <div class="error-msg" id="error-msg"></div>
+
+    <div class="form-group">
+      <label class="form-label" for="email">Email Address</label>
+      <input class="form-input" type="email" id="email" placeholder="your@email.com" />
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="password">Password</label>
+      <input class="form-input" type="password" id="password" placeholder="Your password" />
+    </div>
+
+    <!-- Remember me + Forgot password -->
+    <div class="remember-row">
+      <div class="remember-left">
+        <input type="checkbox" id="remember-me" />
+        <label for="remember-me">Remember me</label>
+      </div>
+      <a href="forgot-password.html" class="forgot-link">Forgot password?</a>
+    </div>
+
+    <button class="btn-main" onclick="handleLogin()">Log In</button>
+
+    <div class="divider">— or —</div>
+
+    <button class="btn-secondary" onclick="window.location.href='signup.html'">Create a New Account</button>
+  </div>
+
+  <p class="auth-footer" style="margin-top:20px;"><a href='welcome.html'>← Back to home</a> &nbsp;·&nbsp; NeuroFlex360 &copy; Middlesex University Dubai</p>
+
+  <script src="js/auth.js"></script>
+  <script>
+    // If already logged in, go straight to dashboard
+    if (getCurrentUser()) window.location.href = 'index.html';
+
+    // Check for remembered user
+    var remembered = JSON.parse(localStorage.getItem('nf360_remember') || 'null');
+    if (remembered) {
+      var banner = document.getElementById('remembered-banner');
+      var nameEl = document.getElementById('remembered-name');
+      banner.style.display = 'block';
+      nameEl.textContent   = remembered.name.split(' ')[0];
+      // Pre-fill email
+      document.getElementById('email').value = remembered.email;
+    }
+
+    function clearRemembered() {
+      localStorage.removeItem('nf360_remember');
+      document.getElementById('remembered-banner').style.display = 'none';
+      document.getElementById('email').value = '';
+    }
+
+    document.getElementById('password').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') handleLogin();
+    });
+
+    function handleLogin() {
+      var email    = document.getElementById('email').value.trim();
+      var password = document.getElementById('password').value;
+      var errorEl  = document.getElementById('error-msg');
+      errorEl.classList.remove('show');
+
+      if (!email || !password) {
+        errorEl.textContent = 'Please enter your email and password.';
+        errorEl.classList.add('show');
+        return;
+      }
+
+      var result = loginUser(email, password);
+
+      if (result !== true) {
+        errorEl.textContent = result;
+        errorEl.classList.add('show');
+        return;
+      }
+
+      // Handle remember me
+      var rememberChecked = document.getElementById('remember-me').checked;
+      var user = getCurrentUser();
+
+      if (rememberChecked && user) {
+        localStorage.setItem('nf360_remember', JSON.stringify({
+          name:  user.name,
+          email: user.email
+        }));
+      } else if (!rememberChecked) {
+        localStorage.removeItem('nf360_remember');
+      }
+
+      window.location.href = (user.role === 'clinician') ? 'pages/clinician.html' : 'index.html';
+    }
+
+    document.querySelectorAll('.form-input').forEach(function(i) {
+      i.addEventListener('input', function() { this.classList.remove('error'); });
+    });
+  </script>
+</body>
+</html>

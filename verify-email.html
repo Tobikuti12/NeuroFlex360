@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Verify Email – NeuroFlex360</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    body { padding-bottom: 48px; }
+    .auth-header { background: var(--dark); padding: 40px 24px 28px; text-align: center; }
+    .auth-logo { font-size: 40px; margin-bottom: 14px; }
+    .auth-header h1 { font-size: 20px; font-weight: 600; color: white; margin-bottom: 4px; }
+    .auth-header p  { font-size: 13px; color: rgba(255,255,255,0.45); line-height: 1.6; }
+    .auth-card { background: var(--surface); border-radius: var(--radius); margin: 20px 16px 0; padding: 24px 20px; border: 1px solid var(--border); box-shadow: var(--shadow); }
+    .form-label { display: block; font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 6px; }
+    .code-input { width: 100%; padding: 18px; text-align: center; font-size: 32px; font-weight: 600; letter-spacing: 0.2em; font-family: var(--mono); border: 2px solid var(--border); border-radius: 12px; background: var(--bg); color: var(--text); margin-bottom: 6px; transition: border-color 0.2s; }
+    .code-input:focus { outline: none; border-color: var(--accent); }
+    .form-hint { font-size: 12px; color: var(--muted); margin-bottom: 18px; line-height: 1.5; }
+    .btn-main { width: 100%; padding: 14px; background: var(--accent); color: var(--dark); border: none; border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer; font-family: var(--font); transition: opacity 0.2s; }
+    .btn-main:hover { opacity: 0.85; }
+    .error-msg { font-size: 12px; color: var(--red); background: #fcebeb; border-radius: 8px; padding: 10px 12px; margin-bottom: 14px; display: none; }
+    .error-msg.show { display: block; }
+    .proto-notice { background: #fff4e0; border: 1px solid #ba7517; border-radius: 10px; padding: 12px 14px; margin-bottom: 16px; font-size: 12px; color: #78350f; line-height: 1.6; }
+    .resend-link { display: block; text-align: center; font-size: 13px; color: var(--blue); font-weight: 500; margin-top: 16px; cursor: pointer; }
+  </style>
+</head>
+<body>
+
+  <div class="auth-header">
+    <div class="auth-logo">📧</div>
+    <h1 id="page-title">Almost there!</h1>
+    <p id="email-hint">We have sent a 6-digit verification code to your email address. Enter it below to confirm your account.</p>
+  </div>
+
+  <div class="auth-card">
+    <div class="proto-notice">
+      <strong>Prototype mode:</strong> In the live app, this code is emailed to you automatically. For testing, open the browser console (F12 → Console) to find your code.
+    </div>
+
+    <div class="error-msg" id="error-msg"></div>
+
+    <label class="form-label">Verification Code</label>
+    <input class="code-input" type="number" id="code" placeholder="000000" />
+    <p class="form-hint">The code expires after 30 minutes. Check your spam folder if you do not see it.</p>
+
+    <button class="btn-main" onclick="handleVerify()">Verify My Account</button>
+  </div>
+
+  <span class="resend-link" onclick="window.location.href='signup.html'">← Go back and try again</span>
+
+  <script src="js/auth.js"></script>
+  <script>
+    var params = new URLSearchParams(window.location.search);
+    var email  = params.get('email') || '';
+    var name   = params.get('name') || 'there';
+
+    document.getElementById('page-title').textContent = 'Almost there, ' + name + '!';
+    if (email) {
+      document.getElementById('email-hint').textContent =
+        'We sent a 6-digit code to ' + email + '. Enter it below to confirm your account.';
+    }
+
+    document.getElementById('code').addEventListener('input', function() {
+      this.value = this.value.replace(/\D/g,'').slice(0,6);
+    });
+
+    function handleVerify() {
+      var entered  = document.getElementById('code').value.trim();
+      var stored   = localStorage.getItem('nf360_verify_code');
+      var errorEl  = document.getElementById('error-msg');
+      errorEl.classList.remove('show');
+
+      if (!entered || entered.length < 6) {
+        errorEl.textContent = 'Please enter the full 6-digit code.';
+        errorEl.classList.add('show');
+        return;
+      }
+
+      if (entered !== stored) {
+        errorEl.textContent = 'That code is not correct. Please check and try again.';
+        errorEl.classList.add('show');
+        return;
+      }
+
+      // Mark account as verified
+      var users       = getUsers();
+      var verifyEmail = localStorage.getItem('nf360_verify_email');
+      var idx         = users.findIndex(function(u) {
+        return u.email.toLowerCase() === (verifyEmail || '').toLowerCase();
+      });
+      if (idx !== -1) {
+        users[idx].verified = true;
+        localStorage.setItem('nf360_users', JSON.stringify(users));
+      }
+
+      // Clear verification session
+      localStorage.removeItem('nf360_verify_code');
+      localStorage.removeItem('nf360_verify_email');
+
+      // Go to onboarding for new users
+      window.location.href = 'onboarding.html';
+    }
+
+    document.getElementById('code').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') handleVerify();
+    });
+  </script>
+</body>
+</html>

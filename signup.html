@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign Up – NeuroFlex360</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono&display=swap" rel="stylesheet" />
+  <style>
+    body { padding-bottom: 48px; }
+
+    /* Responsive max-width — phones stay narrow, laptops get wider */
+    body { max-width: 600px; }
+
+    .auth-header { background: var(--dark); padding: 36px 24px 28px; text-align: center; }
+    .auth-logo { width: 54px; height: 54px; background: var(--accent); color: var(--dark); border-radius: 16px; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 17px; margin: 0 auto 14px; }
+    .auth-header h1 { font-size: 20px; font-weight: 600; color: white; margin-bottom: 4px; }
+    .auth-header p { font-size: 13px; color: rgba(255,255,255,0.45); }
+
+    .role-section { padding: 20px 16px 0; }
+    .role-label { font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; }
+    .role-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .role-card { background: var(--surface); border: 2px solid var(--border); border-radius: var(--radius); padding: 18px 12px; text-align: center; cursor: pointer; transition: border-color 0.2s, background 0.2s, transform 0.15s; }
+    .role-card:hover { transform: translateY(-2px); }
+    .role-card.selected { border-color: var(--accent); background: rgba(78,204,163,0.07); }
+    .role-icon { font-size: 28px; margin-bottom: 6px; }
+    .role-title { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 3px; }
+    .role-desc { font-size: 11px; color: var(--muted); line-height: 1.4; }
+
+    .auth-card { background: var(--surface); border-radius: var(--radius); margin: 16px 16px 0; padding: 22px 20px; border: 1px solid var(--border); box-shadow: var(--shadow); }
+
+    /* Two-column layout for wider screens */
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 480px) { .form-row { grid-template-columns: 1fr; } }
+
+    .form-group { margin-bottom: 15px; }
+    .form-label { display: block; font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 6px; }
+    .form-input, .form-select {
+      width: 100%; padding: 12px 14px;
+      border: 1.5px solid var(--border); border-radius: 10px;
+      font-size: 14px; font-family: var(--font);
+      color: var(--text); background: var(--bg);
+      transition: border-color 0.2s, box-shadow 0.2s;
+      -webkit-appearance: none;
+    }
+    .form-input:focus, .form-select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(78,204,163,0.15); }
+    .form-input.error, .form-select.error { border-color: var(--red); }
+    .form-input::placeholder { color: #b0b8c4; }
+    .select-wrap { position: relative; }
+    .select-wrap::after { content: '▾'; position: absolute; right: 14px; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; }
+
+    .field-error { font-size: 11px; color: var(--red); margin-top: 4px; display: none; }
+    .field-error.show { display: block; }
+    .error-msg { font-size: 12px; color: var(--red); background: #fcebeb; border-radius: 8px; padding: 10px 12px; margin-bottom: 14px; display: none; }
+    .error-msg.show { display: block; }
+
+    .btn-signup { display: block; width: calc(100% - 32px); padding: 15px; background: var(--accent); color: var(--dark); border: none; border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer; font-family: var(--font); margin: 16px 16px 0; transition: opacity 0.2s; }
+    .btn-signup:hover { opacity: 0.85; }
+    .auth-footer { text-align: center; font-size: 13px; color: var(--muted); margin-top: 16px; }
+    .auth-footer a { color: var(--blue); font-weight: 500; }
+
+    .section-divider { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); padding: 12px 0; border-top: 1px solid var(--border); margin-top: 6px; }
+  </style>
+</head>
+<body>
+
+  <div id="form-view">
+    <div class="auth-header">
+      <div class="auth-logo">NF</div>
+      <h1>Create Account</h1>
+      <p>NeuroFlex360 — Cognitive Rehabilitation</p>
+    </div>
+
+    <!-- ROLE SELECTOR -->
+    <div class="role-section">
+      <p class="role-label">I am registering as a…</p>
+      <div class="role-cards">
+        <div class="role-card" id="role-patient" onclick="selectRole('patient')">
+          <div class="role-icon">🧑‍⚕️</div>
+          <div class="role-title">Patient</div>
+          <div class="role-desc">I want to do cognitive training sessions</div>
+        </div>
+        <div class="role-card" id="role-clinician" onclick="selectRole('clinician')">
+          <div class="role-icon">👨‍⚕️</div>
+          <div class="role-title">Clinician</div>
+          <div class="role-desc">I monitor and manage patient progress</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="auth-card">
+      <div class="error-msg" id="error-msg"></div>
+
+      <!-- Name -->
+      <div class="form-group">
+        <label class="form-label" for="full-name">Full Name</label>
+        <input class="form-input" type="text" id="full-name" placeholder="e.g. Sarah Johnson" />
+        <div class="field-error" id="err-name">Please enter your name</div>
+      </div>
+
+      <!-- Age + Medical Category (two columns) -->
+      <div class="form-row" id="patient-fields">
+        <div class="form-group">
+          <label class="form-label" for="age">Age</label>
+          <input class="form-input" type="number" id="age" placeholder="e.g. 68" min="1" max="120" />
+          <div class="field-error" id="err-age">Please enter a valid age</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="medical-category">Medical Category</label>
+          <div class="select-wrap">
+            <select class="form-select" id="medical-category">
+              <option value="">Select condition…</option>
+              <option value="stroke">Post-Stroke Recovery</option>
+              <option value="dementia">Dementia / Alzheimer's</option>
+              <option value="mci">Mild Cognitive Impairment</option>
+              <option value="tbi">Traumatic Brain Injury</option>
+              <option value="parkinsons">Parkinson's Disease</option>
+              <option value="healthy-aging">Healthy Aging</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div class="field-error" id="err-medical">Please select a category</div>
+        </div>
+      </div>
+
+      <!-- Email -->
+      <div class="form-group">
+        <label class="form-label" for="email">Email Address</label>
+        <input class="form-input" type="email" id="email" placeholder="your@email.com" />
+        <div class="field-error" id="err-email">Please enter a valid email</div>
+      </div>
+
+      <!-- Password -->
+      <div class="form-group">
+        <label class="form-label" for="password">Password</label>
+        <input class="form-input" type="password" id="password" placeholder="Minimum 6 characters" />
+        <div class="field-error" id="err-password">Password must be at least 6 characters</div>
+      </div>
+
+      <!-- Confirm password -->
+      <div class="form-group">
+        <label class="form-label" for="confirm">Confirm Password</label>
+        <input class="form-input" type="password" id="confirm" placeholder="Repeat your password" />
+        <div class="field-error" id="err-confirm">Passwords do not match</div>
+      </div>
+
+      <!-- Clinician extra fields (hidden until clinician selected) -->
+      <div id="clinician-fields" style="display:none;">
+        <p class="section-divider">Clinician Details</p>
+        <div class="form-group">
+          <label class="form-label" for="specialisation">Specialisation</label>
+          <div class="select-wrap">
+            <select class="form-select" id="specialisation">
+              <option value="">Select your field…</option>
+              <option value="neurologist">Neurologist</option>
+              <option value="physiotherapist">Physiotherapist</option>
+              <option value="occupational-therapist">Occupational Therapist</option>
+              <option value="speech-therapist">Speech &amp; Language Therapist</option>
+              <option value="psychiatrist">Psychiatrist</option>
+              <option value="nurse">Specialist Nurse</option>
+              <option value="caregiver">Caregiver</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="institution">Hospital / Institution</label>
+          <input class="form-input" type="text" id="institution" placeholder="e.g. Dubai Health Authority" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="licence">Licence No. (optional)</label>
+          <input class="form-input" type="text" id="licence" placeholder="e.g. DHA-12345" />
+        </div>
+      </div>
+    </div>
+
+    <button class="btn-signup" onclick="handleSignup()">Create Account →</button>
+    <p class="auth-footer" style="margin-top:14px;">Already have an account? <a href="login.html">Log in</a></p>
+  </div>
+
+  <script src="js/auth.js"></script>
+  <script>
+    var selectedRole = null;
+
+    function selectRole(role) {
+      selectedRole = role;
+      document.getElementById('role-patient').classList.toggle('selected', role === 'patient');
+      document.getElementById('role-clinician').classList.toggle('selected', role === 'clinician');
+      // Show/hide patient-specific and clinician-specific fields
+      document.getElementById('patient-fields').style.display   = role === 'patient'   ? '' : 'none';
+      document.getElementById('clinician-fields').style.display = role === 'clinician' ? '' : 'none';
+    }
+
+    // Default: show patient fields
+    document.getElementById('patient-fields').style.display = '';
+
+    function handleSignup() {
+      var ok = true;
+      document.querySelectorAll('.field-error').forEach(function(e) { e.classList.remove('show'); });
+      document.querySelectorAll('.form-input, .form-select').forEach(function(e) { e.classList.remove('error'); });
+      document.getElementById('error-msg').classList.remove('show');
+
+      if (!selectedRole) { alert('Please select Patient or Clinician to continue.'); return; }
+
+      var name = document.getElementById('full-name').value.trim();
+      if (!name) { show('err-name'); err('full-name'); ok = false; }
+
+      // Patient-specific validation
+      if (selectedRole === 'patient') {
+        var age = parseInt(document.getElementById('age').value);
+        if (!age || age < 1 || age > 120) { show('err-age'); err('age'); ok = false; }
+
+        var medCat = document.getElementById('medical-category').value;
+        if (!medCat) { show('err-medical'); err('medical-category'); ok = false; }
+      }
+
+      var email = document.getElementById('email').value.trim();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { show('err-email'); err('email'); ok = false; }
+
+      var pw = document.getElementById('password').value;
+      if (pw.length < 6) { show('err-password'); err('password'); ok = false; }
+
+      if (pw !== document.getElementById('confirm').value) { show('err-confirm'); err('confirm'); ok = false; }
+
+      if (!ok) return;
+
+      var ageVal   = selectedRole === 'patient' ? parseInt(document.getElementById('age').value) : null;
+      var medVal   = selectedRole === 'patient' ? document.getElementById('medical-category').value : null;
+      var specVal  = selectedRole === 'clinician' ? document.getElementById('specialisation').value : null;
+      var instVal  = selectedRole === 'clinician' ? document.getElementById('institution').value.trim() : null;
+      var licVal   = selectedRole === 'clinician' ? document.getElementById('licence').value.trim() : null;
+
+      var result = registerUser(name, email, pw, selectedRole, ageVal, medVal, specVal, instVal, licVal);
+
+      if (result !== true) {
+        var errEl = document.getElementById('error-msg');
+        errEl.textContent = result;
+        errEl.classList.add('show');
+        return;
+      }
+
+      // Generate verification code
+      var verifyCode = Math.floor(100000 + Math.random() * 900000).toString();
+      localStorage.setItem('nf360_verify_code',  verifyCode);
+      localStorage.setItem('nf360_verify_email', email.toLowerCase());
+      console.log('[NeuroFlex360 Prototype] Email verification code for ' + email + ': ' + verifyCode);
+
+      window.location.href = 'verify-email.html?email=' + encodeURIComponent(email) + '&name=' + encodeURIComponent(name.split(' ')[0]);
+    }
+
+    function show(id) { document.getElementById(id).classList.add('show'); }
+    function err(id)  { document.getElementById(id).classList.add('error'); }
+
+    document.querySelectorAll('.form-input, .form-select').forEach(function(input) {
+      input.addEventListener('input', function() { this.classList.remove('error'); });
+    });
+  </script>
+</body>
+</html>
