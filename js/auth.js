@@ -46,8 +46,9 @@ function registerUser(name, email, password, role, age, medicalCategory, special
   users.push(newUser);
   localStorage.setItem('nf360_users', JSON.stringify(users));
 
-  // Log them in straight away
-  localStorage.setItem('nf360_current', newUser.id);
+  // NOTE: We do NOT log them in yet — session is set after email verification
+  // Store the pending user ID so verify-email.html can log them in
+  localStorage.setItem('nf360_pending_id', newUser.id);
   return true;
 }
 

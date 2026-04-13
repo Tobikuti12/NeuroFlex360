@@ -148,7 +148,7 @@ function renderChart(data) {
 }
 
 // ---------- GENERATE CLINICIAN NOTE ----------
-function renderClinicianNote(data) {
+function renderTherapistNote(data) {
   const noteEl  = document.getElementById('clinician-note');
   const memData = data.memory    || [];
   const attData = data.attention || [];
@@ -205,7 +205,7 @@ function renderClinicianNote(data) {
   }
 
   // Final general note
-  notes.push('Clinician note generated on ' + new Date().toLocaleDateString('en-GB') + '.');
+  notes.push('Therapist note generated on ' + new Date().toLocaleDateString('en-GB') + '.');
 
   noteEl.textContent = notes.join(' ');
 }
@@ -221,7 +221,7 @@ function init() {
   renderModule('reaction',  data, 'rt-score',  'rt-sessions',  'rt-change',  'rt-bar');
 
   renderChart(data);
-  renderClinicianNote(data);
+  renderTherapistNote(data);
 }
 
 window.addEventListener('DOMContentLoaded', function() {

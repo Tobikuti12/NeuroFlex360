@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Memory – NeuroFlex360</title>
+  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="../css/memory.css" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+  <!-- PAGE HEADER -->
+  <div class="page-header">
+    <div class="page-header-top">
+      <div>
+        <h2>🧠 Memory Training</h2>
+        <p>Match all pairs before time runs out · <span id="difficulty-badge" style="font-weight:600;"></span></p>
+      </div>
+      <button class="back-btn" onclick="window.location.href='../index.html'">← Back</button>
+    </div>
+    <div class="stat-row">
+      <div class="stat-box">
+        <div class="stat-val" id="stat-moves">0</div>
+        <div class="stat-lbl">Moves</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val" id="stat-pairs">0 / 6</div>
+        <div class="stat-lbl">Pairs Found</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val" id="stat-timer">60</div>
+        <div class="stat-lbl">Seconds Left</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GAME AREA (shown while playing) -->
+  <div class="game-area" id="game-view">
+    <p class="instruction-text">Tap two cards to reveal them. Find all matching pairs!</p>
+    <div class="memory-grid" id="memory-grid">
+      <!-- Cards injected by memory.js -->
+    </div>
+  </div>
+
+  <!-- RESULT SCREEN (shown on completion) -->
+  <div class="result-screen" id="result-view">
+    <div class="result-emoji" id="result-emoji">🎉</div>
+    <h2 class="result-title" id="result-title">Module Complete!</h2>
+    <p class="result-sub" id="result-sub">Great work on your memory session</p>
+    <div class="result-score-box">
+      <div class="result-score-num" id="result-score">--</div>
+      <div class="result-score-lbl">Memory Score</div>
+    </div>
+    <p id="level-change-msg" style="font-size:13px; font-weight:500; margin-bottom:16px; display:none;"></p>
+    <button class="btn-primary" onclick="window.location.href='../index.html'">Back to Home</button>
+    <button class="btn-secondary" onclick="window.location.href='progress.html'">View My Progress</button>
+  </div>
+
+  <script src="../js/auth.js"></script>
+  <script src="../js/congrats.js"></script>
+  <script src="../js/memory.js"></script>
+</body>
+</html>

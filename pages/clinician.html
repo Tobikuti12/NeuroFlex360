@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Therapist Dashboard – NeuroFlex360</title>
+  <link rel="stylesheet" href="../css/style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono&display=swap" rel="stylesheet" />
+  <style>
+
+    /* ---- HEADER ---- */
+    .clinician-header {
+      background: var(--dark);
+      padding: 20px 20px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .clinician-header-left { display: flex; align-items: center; gap: 12px; }
+    .clinician-logo { width: 40px; height: 40px; background: var(--accent); color: var(--dark); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 13px; }
+    .clinician-title { font-size: 16px; font-weight: 600; color: white; }
+    .clinician-sub   { font-size: 11px; color: rgba(255,255,255,0.45); margin-top: 1px; }
+    .logout-btn { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 8px; padding: 6px 12px; font-size: 12px; cursor: pointer; font-family: var(--font); }
+
+    /* ---- PATIENT LIST ---- */
+    .dashboard-section { padding: 16px; }
+    .dash-label { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; }
+
+    .patient-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 12px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    /* Card header row — click to expand */
+    .patient-card-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 16px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .patient-card-header:hover { background: #f9fafb; }
+
+    .patient-avatar {
+      width: 42px; height: 42px;
+      border-radius: 50%;
+      background: var(--dark);
+      color: var(--accent);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 600; font-size: 16px;
+      flex-shrink: 0;
+    }
+
+    .patient-meta { flex: 1; }
+    .patient-name { font-size: 14px; font-weight: 600; color: var(--text); }
+    .patient-since { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+    .patient-streak {
+      font-size: 12px; font-weight: 500;
+      background: rgba(78,204,163,0.1);
+      border: 1px solid rgba(78,204,163,0.25);
+      color: var(--dark);
+      border-radius: 16px;
+      padding: 4px 10px;
+    }
+    .patient-streak.no-streak {
+      background: rgba(107,114,128,0.08);
+      border-color: var(--border);
+      color: var(--muted);
+    }
+
+    .expand-arrow { font-size: 12px; color: var(--muted); margin-left: 4px; transition: transform 0.2s; }
+    .patient-card.open .expand-arrow { transform: rotate(180deg); }
+
+    /* Expanded detail panel */
+    .patient-detail {
+      display: none;
+      padding: 0 16px 16px;
+      border-top: 1px solid var(--border);
+    }
+    .patient-card.open .patient-detail { display: block; }
+
+    /* Mini stat row */
+    .mini-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin: 14px 0 12px;
+    }
+    .mini-stat {
+      background: var(--bg);
+      border-radius: 10px;
+      padding: 10px 8px;
+      text-align: center;
+      border: 1px solid var(--border);
+    }
+    .mini-stat-val { font-size: 18px; font-weight: 600; color: var(--text); }
+    .mini-stat-lbl { font-size: 10px; color: var(--muted); margin-top: 2px; }
+
+    /* Module rows inside patient card */
+    .mini-module-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .mini-module-row:last-child { border-bottom: none; }
+
+    .mini-mod-icon { font-size: 16px; width: 28px; text-align: center; }
+    .mini-mod-name { font-size: 13px; font-weight: 500; flex: 1; }
+    .mini-mod-level { font-size: 10px; color: var(--muted); }
+    .mini-mod-score { font-size: 15px; font-weight: 600; }
+    .mini-mod-sessions { font-size: 10px; color: var(--muted); text-align: right; }
+
+    /* Progress bar inside card */
+    .mini-bar-wrap { height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; margin-top: 3px; }
+    .mini-bar { height: 100%; border-radius: 2px; }
+
+    /* Therapist note inside card */
+    .mini-note {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.7;
+      background: var(--bg);
+      border-radius: 8px;
+      padding: 10px 12px;
+      margin-top: 12px;
+      border: 1px solid var(--border);
+    }
+    .mini-note strong { color: var(--text); }
+
+    /* No patients yet */
+    .empty-state {
+      text-align: center;
+      padding: 48px 24px;
+      color: var(--muted);
+    }
+    .empty-state .empty-icon { font-size: 48px; margin-bottom: 12px; }
+    .empty-state p { font-size: 14px; line-height: 1.6; }
+
+    /* Summary banner at top */
+    .summary-banner {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 16px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+    .banner-stat { text-align: center; }
+    .banner-val { font-size: 22px; font-weight: 600; color: var(--text); }
+    .banner-lbl { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 2px; }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <div class="clinician-header">
+    <div class="clinician-header-left">
+      <div class="clinician-logo">NF</div>
+      <div>
+        <div class="clinician-title" id="clinician-name">Therapist</div>
+        <div class="clinician-sub">Patient Overview Dashboard</div>
+      </div>
+    </div>
+    <button class="logout-btn" onclick="doLogout()">Log Out</button>
+  </div>
+
+  <!-- SUMMARY BANNER -->
+  <div class="summary-banner">
+    <div class="banner-stat">
+      <div class="banner-val" id="total-patients">0</div>
+      <div class="banner-lbl">Patients</div>
+    </div>
+    <div class="banner-stat">
+      <div class="banner-val" id="total-sessions">0</div>
+      <div class="banner-lbl">Total Sessions</div>
+    </div>
+    <div class="banner-stat">
+      <div class="banner-val" id="active-today">0</div>
+      <div class="banner-lbl">Active Today</div>
+    </div>
+  </div>
+
+  <!-- PATIENT LIST -->
+  <div class="dashboard-section">
+    <p class="dash-label">Registered Patients</p>
+    <div id="patient-list">
+      <!-- Injected by JS -->
+    </div>
+  </div>
+
+  <script src="../js/auth.js"></script>
+  <script>
+
+    // ---- REQUIRE CLINICIAN ----
+    var clinician = requireAuth();
+    if (clinician) {
+      if (clinician.role !== 'clinician') {
+        // Patient landed here by mistake — send them back
+        window.location.href = '../index.html';
+      }
+      document.getElementById('clinician-name').textContent = clinician.name;
+    }
+
+    function doLogout() { logoutUser(); }
+
+    // ---- HELPERS ----
+    var LABELS   = { 1: 'Easy', 2: 'Medium', 3: 'Hard' };
+    var COLOURS  = { 1: '#3b6d11', 2: '#ba7517', 3: '#a32d2d' };
+    var today    = new Date().toDateString();
+
+    function getPatientScores(userId) {
+      return JSON.parse(localStorage.getItem('nf360_scores_' + userId) || '{}');
+    }
+
+    function getPatientStreak(userId) {
+      var s = JSON.parse(localStorage.getItem('nf360_streak_' + userId) || '{"count":0,"lastDate":null}');
+      var yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      if (s.lastDate !== today && s.lastDate !== yesterday.toDateString()) return 0;
+      return s.count;
+    }
+
+    function getLatestScore(entries) {
+      if (!entries || entries.length === 0) return null;
+      return entries[entries.length - 1];
+    }
+
+    function getAvg(entries) {
+      if (!entries || entries.length === 0) return null;
+      var sum = entries.reduce(function(a, b) { return a + b.score; }, 0);
+      return Math.round(sum / entries.length);
+    }
+
+    function getLevel(entries) {
+      if (!entries || entries.length === 0) return 1;
+      return entries[entries.length - 1].level || 1;
+    }
+
+    function getTrend(entries) {
+      if (!entries || entries.length < 2) return null;
+      return entries[entries.length - 1].score - entries[entries.length - 2].score;
+    }
+
+    function totalSessionCount(scores) {
+      return (scores.memory    ? scores.memory.length    : 0) +
+             (scores.attention ? scores.attention.length : 0) +
+             (scores.reaction  ? scores.reaction.length  : 0);
+    }
+
+    function wasActiveToday(userId) {
+      var scores = getPatientScores(userId);
+      var allEntries = [].concat(
+        scores.memory    || [],
+        scores.attention || [],
+        scores.reaction  || []
+      );
+      return allEntries.some(function(e) {
+        return new Date(e.date).toDateString() === today;
+      });
+    }
+
+    function formatDate(isoStr) {
+      if (!isoStr) return 'Unknown';
+      return new Date(isoStr).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' });
+    }
+
+    // ---- AUTO-GENERATE CLINICIAN NOTE ----
+    function generateNote(scores, name) {
+      var first = name.split(' ')[0];
+      var notes = [];
+
+      var memEntries = scores.memory    || [];
+      var attEntries = scores.attention || [];
+      var rtEntries  = scores.reaction  || [];
+
+      if (memEntries.length === 0 && attEntries.length === 0 && rtEntries.length === 0) {
+        return first + ' has not completed any sessions yet.';
+      }
+
+      if (memEntries.length > 0) {
+        var ml = getLatestScore(memEntries).score;
+        var mt = getTrend(memEntries);
+        if (ml >= 75)      notes.push('Memory is performing well (' + ml + '/100).');
+        else if (ml >= 50) notes.push('Memory is at a moderate level (' + ml + '/100) — consistent practice recommended.');
+        else               notes.push('Memory score is low (' + ml + '/100) — consider increasing session frequency.');
+        if (mt !== null && mt > 0) notes.push('Improvement of +' + mt + ' points from the previous memory session.');
+        if (mt !== null && mt < 0) notes.push('Memory score dropped by ' + Math.abs(mt) + ' points — monitor closely.');
+      }
+
+      if (attEntries.length > 0) {
+        var al = getLatestScore(attEntries).score;
+        if (al >= 70)      notes.push('Attention performance is good (' + al + '/100).');
+        else               notes.push('Attention score (' + al + '/100) suggests difficulty with sustained focus.');
+      }
+
+      if (rtEntries.length > 0) {
+        var rl = getLatestScore(rtEntries).score;
+        // Score is normalised 0–100; reverse-convert to rough ms
+        var ms = Math.round(800 - rl * 6.5);
+        if (ms < 300)      notes.push('Reaction time is excellent (~' + ms + 'ms).');
+        else if (ms < 500) notes.push('Reaction time is within normal range (~' + ms + 'ms).');
+        else               notes.push('Reaction time (~' + ms + 'ms) is below target — neuromotor exercises may help.');
+      }
+
+      notes.push('Report generated ' + new Date().toLocaleDateString('en-GB') + '.');
+      return notes.join(' ');
+    }
+
+    // ---- BUILD PATIENT CARD HTML ----
+    function buildPatientCard(patient, index) {
+      var scores    = getPatientScores(patient.id);
+      var streak    = getPatientStreak(patient.id);
+      var sessions  = totalSessionCount(scores);
+      var active    = wasActiveToday(patient.id);
+
+      var memEntries = scores.memory    || [];
+      var attEntries = scores.attention || [];
+      var rtEntries  = scores.reaction  || [];
+
+      var memLatest  = getLatestScore(memEntries);
+      var attLatest  = getLatestScore(attEntries);
+      var rtLatest   = getLatestScore(rtEntries);
+
+      var overallAvg = '--';
+      var avgs = [getAvg(memEntries), getAvg(attEntries)].filter(function(v) { return v !== null; });
+      if (avgs.length) overallAvg = Math.round(avgs.reduce(function(a,b){return a+b;},0) / avgs.length);
+
+      var initials = patient.name.split(' ').map(function(w){ return w[0]; }).join('').toUpperCase().slice(0,2);
+      var streakClass = streak > 0 ? 'patient-streak' : 'patient-streak no-streak';
+      var streakText  = streak > 0 ? '🔥 ' + streak + '-day streak' : 'No streak yet';
+      var activeTag   = active ? ' 🟢' : '';
+
+      var note = generateNote(scores, patient.name);
+
+      // Module rows
+      function moduleRow(icon, name, entries, colour, unit) {
+        var latest  = getLatestScore(entries);
+        var level   = getLevel(entries);
+        var trend   = getTrend(entries);
+        var sessNum = entries.length;
+        var scoreDisplay = latest ? latest.score + unit : '--';
+        var barWidth     = latest ? Math.min(100, latest.score) + '%' : '0%';
+        var trendTxt = '';
+        if (trend !== null) {
+          trendTxt = trend >= 0
+            ? '<span style="color:#3b6d11; font-size:10px;">↑ +' + trend + '</span>'
+            : '<span style="color:#a32d2d; font-size:10px;">↓ ' + trend + '</span>';
+        }
+        return '<div class="mini-module-row">' +
+          '<div class="mini-mod-icon">' + icon + '</div>' +
+          '<div style="flex:1">' +
+            '<div style="display:flex; justify-content:space-between; align-items:center;">' +
+              '<span class="mini-mod-name">' + name + '</span>' +
+              '<span class="mini-mod-score" style="color:' + colour + '">' + scoreDisplay + ' ' + trendTxt + '</span>' +
+            '</div>' +
+            '<div style="display:flex; justify-content:space-between; align-items:center; margin-top:3px;">' +
+              '<span class="mini-mod-level" style="color:' + COLOURS[level] + '">Lv.' + level + ' ' + LABELS[level] + '</span>' +
+              '<span class="mini-mod-sessions">' + sessNum + ' session' + (sessNum !== 1 ? 's' : '') + '</span>' +
+            '</div>' +
+            '<div class="mini-bar-wrap"><div class="mini-bar" style="width:' + barWidth + '; background:' + colour + '"></div></div>' +
+          '</div>' +
+        '</div>';
+      }
+
+      return '<div class="patient-card" id="card-' + index + '">' +
+        '<div class="patient-card-header" onclick="toggleCard(' + index + ')">' +
+          '<div class="patient-avatar">' + initials + '</div>' +
+          '<div class="patient-meta">' +
+            '<div class="patient-name">' + patient.name + activeTag + '</div>' +
+            '<div class="patient-since">Registered ' + formatDate(patient.createdAt) + ' · ' + sessions + ' sessions total</div>' +
+          '</div>' +
+          '<span class="' + streakClass + '">' + streakText + '</span>' +
+          '<span class="expand-arrow">▾</span>' +
+        '</div>' +
+        '<div class="patient-detail">' +
+          '<div class="mini-stats">' +
+            '<div class="mini-stat"><div class="mini-stat-val">' + sessions + '</div><div class="mini-stat-lbl">Sessions</div></div>' +
+            '<div class="mini-stat"><div class="mini-stat-val">' + overallAvg + '</div><div class="mini-stat-lbl">Avg Score</div></div>' +
+            '<div class="mini-stat"><div class="mini-stat-val">' + (streak || 0) + '</div><div class="mini-stat-lbl">Day Streak</div></div>' +
+          '</div>' +
+          moduleRow('🧠', 'Memory',        memEntries, 'var(--blue)',  '/100') +
+          moduleRow('🎯', 'Attention',      attEntries, 'var(--amber)', '/100') +
+          moduleRow('⚡', 'Reaction Time',  rtEntries,  'var(--green)', '/100') +
+          '<div class="mini-note"><strong>Clinical Note: </strong>' + note + '</div>' +
+        '</div>' +
+      '</div>';
+    }
+
+    function toggleCard(index) {
+      var card = document.getElementById('card-' + index);
+      card.classList.toggle('open');
+    }
+
+    // ---- RENDER DASHBOARD ----
+    function renderDashboard() {
+      var allUsers   = getUsers();
+      var patients   = allUsers.filter(function(u) { return u.role === 'patient'; });
+      var listEl     = document.getElementById('patient-list');
+
+      // Summary banner
+      var totalSess  = 0;
+      var activeCount = 0;
+      patients.forEach(function(p) {
+        var s = getPatientScores(p.id);
+        totalSess += totalSessionCount(s);
+        if (wasActiveToday(p.id)) activeCount++;
+      });
+
+      document.getElementById('total-patients').textContent = patients.length;
+      document.getElementById('total-sessions').textContent = totalSess;
+      document.getElementById('active-today').textContent   = activeCount;
+
+      if (patients.length === 0) {
+        listEl.innerHTML = '<div class="empty-state">' +
+          '<div class="empty-icon">👥</div>' +
+          '<p>No patients have registered yet.<br>Once patients create their accounts, their progress will appear here.</p>' +
+        '</div>';
+        return;
+      }
+
+      // Sort: active today first, then by most recent session
+      patients.sort(function(a, b) {
+        var aActive = wasActiveToday(a.id) ? 1 : 0;
+        var bActive = wasActiveToday(b.id) ? 1 : 0;
+        return bActive - aActive;
+      });
+
+      listEl.innerHTML = patients.map(function(p, i) {
+        return buildPatientCard(p, i);
+      }).join('');
+    }
+
+    renderDashboard();
+  </script>
+</body>
+</html>

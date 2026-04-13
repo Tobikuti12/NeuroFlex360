@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reaction Time – NeuroFlex360</title>
+  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="../css/reaction.css" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+  <!-- PAGE HEADER -->
+  <div class="page-header">
+    <div class="page-header-top">
+      <div>
+        <h2>⚡ Reaction Time</h2>
+        <p>Tap when the circle turns green · <span id="difficulty-badge" style="font-weight:600;"></span></p>
+      </div>
+      <button class="back-btn" onclick="window.location.href='../index.html'">← Back</button>
+    </div>
+    <div class="stat-row">
+      <div class="stat-box">
+        <div class="stat-val" id="stat-best">—</div>
+        <div class="stat-lbl">Best (ms)</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val" id="stat-avg">—</div>
+        <div class="stat-lbl">Average (ms)</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val" id="stat-rounds">0 / 5</div>
+        <div class="stat-lbl">Rounds</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GAME AREA -->
+  <div class="game-area" id="game-view">
+    <p class="instruction-text" id="rt-instruction">Tap the circle to start</p>
+
+    <!-- The big circle the user taps -->
+    <div class="rt-circle-wrap">
+      <div class="rt-circle idle" id="rt-circle" onclick="handleTap()">
+        <span class="rt-circle-label" id="rt-circle-label">TAP TO<br>START</span>
+      </div>
+    </div>
+
+    <!-- Shows the last reaction time -->
+    <div class="rt-result-display hidden" id="rt-result-display">
+      <span class="rt-ms" id="rt-ms">--</span>
+      <span class="rt-ms-label">milliseconds</span>
+    </div>
+
+    <!-- Bar chart of previous round times -->
+    <div class="rt-history-section">
+      <p class="rt-history-label">Round history</p>
+      <div class="rt-bars" id="rt-bars">
+        <!-- Bars added dynamically -->
+      </div>
+    </div>
+
+  </div>
+
+  <!-- RESULT SCREEN -->
+  <div class="result-screen" id="result-view">
+    <div class="result-emoji">⚡</div>
+    <h2 class="result-title">Reaction Complete!</h2>
+    <p class="result-sub" id="result-sub">5 rounds completed</p>
+    <div class="result-score-box">
+      <div class="result-score-num" id="result-score">--</div>
+      <div class="result-score-lbl" id="result-score-lbl">Average Reaction Time (ms)</div>
+    </div>
+    <p id="level-change-msg" style="font-size:13px; font-weight:500; margin-bottom:16px; display:none;"></p>
+    <button class="btn-primary" onclick="window.location.href='../index.html'">Back to Home</button>
+    <button class="btn-secondary" onclick="window.location.href='progress.html'">View My Progress</button>
+  </div>
+
+  <script src="../js/auth.js"></script>
+  <script src="../js/congrats.js"></script>
+  <script src="../js/reaction.js"></script>
+</body>
+</html>

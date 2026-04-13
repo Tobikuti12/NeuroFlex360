@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Progress – NeuroFlex360</title>
+  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="../css/progress.css" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+  <!-- HEADER -->
+  <div class="page-header">
+    <div class="page-header-top">
+      <div>
+        <h2>📊 Progress Report</h2>
+        <p>Your cognitive performance overview</p>
+      </div>
+      <button class="back-btn" onclick="window.location.href='../index.html'">← Back</button>
+    </div>
+  </div>
+
+  <!-- SUMMARY STATS ROW -->
+  <section class="summary-section">
+    <div class="summary-grid">
+      <div class="sum-card">
+        <div class="sum-val" id="sum-sessions">--</div>
+        <div class="sum-lbl">Sessions</div>
+        <div class="sum-trend" id="sum-sessions-trend"></div>
+      </div>
+      <div class="sum-card">
+        <div class="sum-val" id="sum-avg">--</div>
+        <div class="sum-lbl">Avg Score</div>
+        <div class="sum-trend" id="sum-avg-trend"></div>
+      </div>
+      <div class="sum-card">
+        <div class="sum-val" id="sum-streak">--</div>
+        <div class="sum-lbl">Day Streak</div>
+        <div class="sum-trend">🔥</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MODULE SCORES -->
+  <section class="module-section">
+    <h3 class="section-label">Module Performance</h3>
+
+    <div class="module-row">
+      <div class="mr-icon" style="background:#e8f4ff;">🧠</div>
+      <div class="mr-info">
+        <div class="mr-name">Memory</div>
+        <div class="mr-sub" id="mem-sessions">-- sessions</div>
+        <div class="mr-bar-wrap">
+          <div class="mr-bar" id="mem-bar" style="background: var(--blue);"></div>
+        </div>
+      </div>
+      <div class="mr-score">
+        <div class="mr-val" id="mem-score" style="color: var(--blue);">--</div>
+        <div class="mr-change" id="mem-change"></div>
+      </div>
+    </div>
+
+    <div class="module-row">
+      <div class="mr-icon" style="background:#fff4e0;">🎯</div>
+      <div class="mr-info">
+        <div class="mr-name">Attention</div>
+        <div class="mr-sub" id="att-sessions">-- sessions</div>
+        <div class="mr-bar-wrap">
+          <div class="mr-bar" id="att-bar" style="background: var(--amber);"></div>
+        </div>
+      </div>
+      <div class="mr-score">
+        <div class="mr-val" id="att-score" style="color: var(--amber);">--</div>
+        <div class="mr-change" id="att-change"></div>
+      </div>
+    </div>
+
+    <div class="module-row">
+      <div class="mr-icon" style="background:#eaf3de;">⚡</div>
+      <div class="mr-info">
+        <div class="mr-name">Reaction Time</div>
+        <div class="mr-sub" id="rt-sessions">-- sessions</div>
+        <div class="mr-bar-wrap">
+          <div class="mr-bar" id="rt-bar" style="background: var(--green);"></div>
+        </div>
+      </div>
+      <div class="mr-score">
+        <div class="mr-val" id="rt-score" style="color: var(--green);">--</div>
+        <div class="mr-change" id="rt-change"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SCORE HISTORY CHART -->
+  <section class="chart-section">
+    <h3 class="section-label">Memory Score History</h3>
+    <div class="bar-chart" id="mem-chart">
+      <div class="no-data-msg" id="no-data-msg">No data yet — complete some sessions first!</div>
+    </div>
+    <div class="chart-x-labels" id="chart-x-labels"></div>
+  </section>
+
+  <!-- CLINICIAN NOTE -->
+  <section class="clinician-section">
+    <h3 class="section-label">Therapist Report</h3>
+    <div class="clinician-card">
+      <div class="clinician-note" id="clinician-note">
+        Complete at least one training session to generate your clinician report.
+      </div>
+    </div>
+  </section>
+
+  <!-- BOTTOM NAV -->
+  <nav class="bottom-nav">
+    <a href="../index.html" class="nav-item">
+      <span class="nav-icon">🏠</span>
+      <span>Home</span>
+    </a>
+    <a href="progress.html" class="nav-item active">
+      <span class="nav-icon">📊</span>
+      <span>Progress</span>
+    </a>
+    <a href="#" class="nav-item">
+      <span class="nav-icon">👤</span>
+      <span>Profile</span>
+    </a>
+  </nav>
+
+  <script src="../js/auth.js"></script>
+  <script>
+    // Therapists should not see this page — send them to their dashboard
+    var user = requireAuth();
+    if (user && user.role === 'clinician') {
+      window.location.href = 'clinician.html';
+    }
+  </script>
+  <script src="../js/progress.js"></script>
+</body>
+</html>

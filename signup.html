@@ -7,60 +7,147 @@
   <link rel="stylesheet" href="css/style.css" />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono&display=swap" rel="stylesheet" />
   <style>
-    body { padding-bottom: 48px; }
-
-    /* Responsive max-width — phones stay narrow, laptops get wider */
-    body { max-width: 600px; }
-
-    .auth-header { background: var(--dark); padding: 36px 24px 28px; text-align: center; }
-    .auth-logo { width: 54px; height: 54px; background: var(--accent); color: var(--dark); border-radius: 16px; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 17px; margin: 0 auto 14px; }
-    .auth-header h1 { font-size: 20px; font-weight: 600; color: white; margin-bottom: 4px; }
-    .auth-header p { font-size: 13px; color: rgba(255,255,255,0.45); }
-
-    .role-section { padding: 20px 16px 0; }
-    .role-label { font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; }
-    .role-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .role-card { background: var(--surface); border: 2px solid var(--border); border-radius: var(--radius); padding: 18px 12px; text-align: center; cursor: pointer; transition: border-color 0.2s, background 0.2s, transform 0.15s; }
-    .role-card:hover { transform: translateY(-2px); }
-    .role-card.selected { border-color: var(--accent); background: rgba(78,204,163,0.07); }
-    .role-icon { font-size: 28px; margin-bottom: 6px; }
-    .role-title { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 3px; }
-    .role-desc { font-size: 11px; color: var(--muted); line-height: 1.4; }
-
-    .auth-card { background: var(--surface); border-radius: var(--radius); margin: 16px 16px 0; padding: 22px 20px; border: 1px solid var(--border); box-shadow: var(--shadow); }
-
-    /* Two-column layout for wider screens */
-    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    @media (max-width: 480px) { .form-row { grid-template-columns: 1fr; } }
-
-    .form-group { margin-bottom: 15px; }
-    .form-label { display: block; font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 6px; }
+    /* Dark navy auth theme matching landing page */
+    body {
+      background: linear-gradient(135deg, #0f1729 0%, #16213e 50%, #0f3460 100%);
+      min-height: 100vh;
+      padding-bottom: 48px;
+      max-width: 600px;
+    }
+    .auth-header {
+      background: transparent;
+      padding: 48px 24px 28px;
+      text-align: center;
+    }
+    .auth-logo {
+      width: 60px; height: 60px;
+      background: var(--accent); color: var(--dark);
+      border-radius: 18px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 20px;
+      margin: 0 auto 16px;
+      box-shadow: 0 8px 24px rgba(78,204,163,0.3);
+    }
+    .auth-header h1 { font-size: 22px; font-weight: 700; color: white; margin-bottom: 4px; }
+    .auth-header p  { font-size: 13px; color: rgba(255,255,255,0.5); line-height: 1.6; }
+    .auth-card {
+      background: rgba(30,45,74,0.8);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      margin: 0 16px;
+      padding: 24px 20px;
+      border: 1px solid rgba(255,255,255,0.1);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    }
+    .form-group { margin-bottom: 16px; }
+    .form-label { display: block; font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.8); margin-bottom: 6px; }
     .form-input, .form-select {
-      width: 100%; padding: 12px 14px;
-      border: 1.5px solid var(--border); border-radius: 10px;
-      font-size: 14px; font-family: var(--font);
-      color: var(--text); background: var(--bg);
+      width: 100%; padding: 13px 14px;
+      border: 1.5px solid rgba(255,255,255,0.12);
+      border-radius: 12px; font-size: 14px;
+      font-family: var(--font);
+      color: white;
+      background: rgba(255,255,255,0.07);
       transition: border-color 0.2s, box-shadow 0.2s;
       -webkit-appearance: none;
     }
-    .form-input:focus, .form-select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(78,204,163,0.15); }
+    .form-input:focus, .form-select:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(78,204,163,0.2);
+    }
     .form-input.error, .form-select.error { border-color: var(--red); }
-    .form-input::placeholder { color: #b0b8c4; }
-    .select-wrap { position: relative; }
-    .select-wrap::after { content: '▾'; position: absolute; right: 14px; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; }
-
-    .field-error { font-size: 11px; color: var(--red); margin-top: 4px; display: none; }
-    .field-error.show { display: block; }
-    .error-msg { font-size: 12px; color: var(--red); background: #fcebeb; border-radius: 8px; padding: 10px 12px; margin-bottom: 14px; display: none; }
+    .form-input::placeholder { color: rgba(255,255,255,0.3); }
+    .form-select option { background: #1e2d4a; color: white; }
+    .error-msg {
+      font-size: 12px; color: #fca5a5;
+      background: rgba(239,68,68,0.15);
+      border: 1px solid rgba(239,68,68,0.3);
+      border-radius: 8px; padding: 10px 12px;
+      margin-bottom: 14px; display: none;
+    }
     .error-msg.show { display: block; }
-
-    .btn-signup { display: block; width: calc(100% - 32px); padding: 15px; background: var(--accent); color: var(--dark); border: none; border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer; font-family: var(--font); margin: 16px 16px 0; transition: opacity 0.2s; }
-    .btn-signup:hover { opacity: 0.85; }
-    .auth-footer { text-align: center; font-size: 13px; color: var(--muted); margin-top: 16px; }
-    .auth-footer a { color: var(--blue); font-weight: 500; }
-
-    .section-divider { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); padding: 12px 0; border-top: 1px solid var(--border); margin-top: 6px; }
-  </style>
+    .field-error { font-size: 11px; color: #fca5a5; margin-top: 4px; display: none; }
+    .field-error.show { display: block; }
+    .btn-main, .btn-signup {
+      display: block; width: 100%; padding: 15px;
+      background: var(--accent); color: var(--dark);
+      border: none; border-radius: 12px;
+      font-size: 15px; font-weight: 700;
+      cursor: pointer; font-family: var(--font);
+      transition: opacity 0.2s, transform 0.15s;
+      min-height: 44px;
+    }
+    .btn-main:hover, .btn-signup:hover { opacity: 0.88; transform: translateY(-1px); }
+    .btn-signup { width: calc(100% - 32px); margin: 16px 16px 0; }
+    .btn-secondary {
+      display: block; width: 100%; padding: 14px;
+      background: rgba(255,255,255,0.07);
+      color: rgba(255,255,255,0.8);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 12px; font-size: 15px;
+      cursor: pointer; font-family: var(--font);
+      transition: background 0.2s; min-height: 44px;
+    }
+    .btn-secondary:hover { background: rgba(255,255,255,0.12); }
+    .divider { text-align: center; font-size: 12px; color: rgba(255,255,255,0.3); margin: 16px 0; }
+    .auth-footer { text-align: center; font-size: 13px; color: rgba(255,255,255,0.4); margin-top: 16px; }
+    .auth-footer a, .back-link a, .forgot-link { color: var(--accent); font-weight: 500; }
+    .back-link { display: block; text-align: center; font-size: 13px; color: rgba(255,255,255,0.4); margin-top: 12px; }
+    .resend-link { display: block; text-align: center; font-size: 13px; color: var(--accent); font-weight: 500; margin-top: 16px; cursor: pointer; }
+    .remember-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+    .remember-left { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+    .remember-left input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent); cursor: pointer; }
+    .remember-left label { font-size: 13px; color: rgba(255,255,255,0.7); cursor: pointer; }
+    .remembered-banner {
+      background: rgba(78,204,163,0.1);
+      border: 1px solid rgba(78,204,163,0.3);
+      border-radius: 10px; padding: 10px 14px;
+      margin-bottom: 16px; font-size: 13px; color: var(--accent);
+    }
+    .remembered-banner button { float: right; background: none; border: none; font-size: 11px; color: rgba(255,255,255,0.4); cursor: pointer; font-family: var(--font); }
+    .role-section { padding: 20px 16px 0; }
+    .role-label { font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.4); margin-bottom: 12px; }
+    .role-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .role-card {
+      background: rgba(30,45,74,0.6);
+      border: 2px solid rgba(255,255,255,0.1);
+      border-radius: 16px; padding: 18px 12px; text-align: center;
+      cursor: pointer; transition: border-color 0.2s, background 0.2s, transform 0.15s;
+    }
+    .role-card:hover { transform: translateY(-2px); border-color: rgba(255,255,255,0.2); }
+    .role-card.selected { border-color: var(--accent); background: rgba(78,204,163,0.1); }
+    .role-icon  { font-size: 28px; margin-bottom: 6px; }
+    .role-title { font-size: 14px; font-weight: 600; color: white; margin-bottom: 3px; }
+    .role-desc  { font-size: 11px; color: rgba(255,255,255,0.4); line-height: 1.4; }
+    .section-divider { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.3); padding: 12px 0; border-top: 1px solid rgba(255,255,255,0.08); margin-top: 6px; }
+    .select-wrap { position: relative; }
+    .select-wrap::after { content: '▾'; position: absolute; right: 14px; top: 50%; transform: translateY(-50%); color: rgba(255,255,255,0.4); pointer-events: none; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 480px) { .form-row { grid-template-columns: 1fr; } }
+    .code-input {
+      width: 100%; padding: 18px; text-align: center;
+      font-size: 32px; font-weight: 700; letter-spacing: 0.25em;
+      font-family: var(--mono);
+      border: 2px solid rgba(255,255,255,0.15);
+      border-radius: 14px;
+      background: rgba(255,255,255,0.07);
+      color: white; margin-bottom: 6px;
+      transition: border-color 0.2s;
+      /* Remove number input arrows */
+      -moz-appearance: textfield;
+    }
+    .code-input::-webkit-inner-spin-button,
+    .code-input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+    .code-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(78,204,163,0.2); }
+    .form-hint { font-size: 12px; color: rgba(255,255,255,0.35); margin-bottom: 18px; line-height: 1.5; }
+    .proto-notice { background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.3); border-radius: 10px; padding: 12px 14px; margin-bottom: 16px; font-size: 12px; color: #fbbf24; line-height: 1.6; }
+    .success-screen { display: none; padding: 60px 24px; text-align: center; }
+    .success-screen.visible { display: block; }
+    .success-emoji { font-size: 60px; margin-bottom: 14px; }
+    .success-title { font-size: 22px; font-weight: 700; color: white; margin-bottom: 6px; }
+    .success-sub   { font-size: 13px; color: rgba(255,255,255,0.5); line-height: 1.6; margin-bottom: 28px; }
+</style>
 </head>
 <body>
 
@@ -82,8 +169,8 @@
         </div>
         <div class="role-card" id="role-clinician" onclick="selectRole('clinician')">
           <div class="role-icon">👨‍⚕️</div>
-          <div class="role-title">Clinician</div>
-          <div class="role-desc">I monitor and manage patient progress</div>
+          <div class="role-title">Therapist</div>
+          <div class="role-desc">I monitor and manage my patients' progress</div>
         </div>
       </div>
     </div>
@@ -144,9 +231,9 @@
         <div class="field-error" id="err-confirm">Passwords do not match</div>
       </div>
 
-      <!-- Clinician extra fields (hidden until clinician selected) -->
+      <!-- Therapist extra fields (hidden until clinician selected) -->
       <div id="clinician-fields" style="display:none;">
-        <p class="section-divider">Clinician Details</p>
+        <p class="section-divider">Therapist Details</p>
         <div class="form-group">
           <label class="form-label" for="specialisation">Specialisation</label>
           <div class="select-wrap">
@@ -200,7 +287,7 @@
       document.querySelectorAll('.form-input, .form-select').forEach(function(e) { e.classList.remove('error'); });
       document.getElementById('error-msg').classList.remove('show');
 
-      if (!selectedRole) { alert('Please select Patient or Clinician to continue.'); return; }
+      if (!selectedRole) { alert('Please select Patient or Therapist to continue.'); return; }
 
       var name = document.getElementById('full-name').value.trim();
       if (!name) { show('err-name'); err('full-name'); ok = false; }
@@ -243,7 +330,7 @@
       var verifyCode = Math.floor(100000 + Math.random() * 900000).toString();
       localStorage.setItem('nf360_verify_code',  verifyCode);
       localStorage.setItem('nf360_verify_email', email.toLowerCase());
-      console.log('[NeuroFlex360 Prototype] Email verification code for ' + email + ': ' + verifyCode);
+      // In production: send verifyCode to email via backend API
 
       window.location.href = 'verify-email.html?email=' + encodeURIComponent(email) + '&name=' + encodeURIComponent(name.split(' ')[0]);
     }
