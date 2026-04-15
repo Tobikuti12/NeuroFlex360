@@ -196,6 +196,11 @@
     </div>
   </div>
 
+    <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="../js/firebase-config.js"></script>
   <script src="../js/auth.js"></script>
   <script>
 
@@ -438,7 +443,55 @@
       }).join('');
     }
 
-    renderDashboard();
+    // Load all patients from Firestore then render
+    getAllPatients().then(function(patients) {
+      var totalSess = 0, activeCount = 0;
+      var today = new Date().toDateString();
+
+      // Load scores for each patient
+      var scorePromises = patients.map(function(p) {
+        return getPatientScores(p.id).then(function(scores) {
+          p._scores = scores;
+          var sessions = (scores.memory    ? scores.memory.length    : 0) +
+                         (scores.attention ? scores.attention.length : 0) +
+                         (scores.reaction  ? scores.reaction.length  : 0);
+          totalSess += sessions;
+          // Check if active today
+          var allEntries = [].concat(scores.memory||[], scores.attention||[], scores.reaction||[]);
+          if (allEntries.some(function(e) { return new Date(e.date).toDateString() === today; })) {
+            activeCount++;
+            p._activeToday = true;
+          }
+          return getPatientStreak(p.id).then(function(streak) {
+            p._streak = streak;
+            return p;
+          });
+        });
+      });
+
+      Promise.all(scorePromises).then(function(patientsFull) {
+        document.getElementById('total-patients').textContent = patientsFull.length;
+        document.getElementById('total-sessions').textContent = totalSess;
+        document.getElementById('active-today').textContent   = activeCount;
+
+        if (patientsFull.length === 0) {
+          document.getElementById('patient-list').innerHTML =
+            '<div class="empty-state"><div class="empty-icon">👥</div>' +
+            '<p>No patients have registered yet.<br>Once patients create their accounts, their progress will appear here.</p></div>';
+          return;
+        }
+
+        patientsFull.sort(function(a,b) { return (b._activeToday?1:0) - (a._activeToday?1:0); });
+
+        document.getElementById('patient-list').innerHTML = patientsFull.map(function(p, i) {
+          return buildPatientCard(p, p._scores, p._streak, i);
+        }).join('');
+      });
+    }).catch(function(err) {
+      console.error('Error loading patients:', err);
+      document.getElementById('patient-list').innerHTML =
+        '<div class="empty-state"><div class="empty-icon">⚠️</div><p>Could not load patients. Please refresh.</p></div>';
+    });
   </script>
 </body>
 </html>

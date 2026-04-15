@@ -162,7 +162,7 @@
     <!-- Remembered name banner (shows if remember me was ticked before) -->
     <div id="remembered-banner" style="display:none; background:rgba(78,204,163,0.1); border:1px solid rgba(78,204,163,0.3); border-radius:10px; padding:10px 14px; margin-bottom:16px; font-size:13px; color:var(--text);">
       <span>👋 Welcome back, <strong id="remembered-name"></strong></span>
-      <button onclick="clearRemembered()" style="float:right; background:none; border:none; font-size:11px; color:var(--muted); cursor:pointer; font-family:var(--font);">Not you?</button>
+      <button onclick="clearRememberedUser()" style="float:right; background:none; border:none; font-size:11px; color:var(--muted); cursor:pointer; font-family:var(--font);">Not you?</button>
     </div>
 
     <div class="error-msg" id="error-msg"></div>
@@ -195,24 +195,23 @@
 
   <p class="auth-footer" style="margin-top:20px;"><a href='welcome.html'>← Back to home</a> &nbsp;·&nbsp; NeuroFlex360 &copy; Middlesex University Dubai</p>
 
+    <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="js/firebase-config.js"></script>
   <script src="js/auth.js"></script>
   <script>
-    // If already logged in, go straight to dashboard
-    if (getCurrentUser()) window.location.href = 'index.html';
-
-    // Check for remembered user
-    var remembered = JSON.parse(localStorage.getItem('nf360_remember') || 'null');
+    // Remember me — pre-fill email
+    var remembered = getRemembered();
     if (remembered) {
-      var banner = document.getElementById('remembered-banner');
-      var nameEl = document.getElementById('remembered-name');
-      banner.style.display = 'block';
-      nameEl.textContent   = remembered.name.split(' ')[0];
-      // Pre-fill email
+      document.getElementById('remembered-banner').style.display = 'block';
+      document.getElementById('remembered-name').textContent = remembered.name.split(' ')[0];
       document.getElementById('email').value = remembered.email;
     }
 
-    function clearRemembered() {
-      localStorage.removeItem('nf360_remember');
+    function clearRememberedUser() {
+      clearRemembered();
       document.getElementById('remembered-banner').style.display = 'none';
       document.getElementById('email').value = '';
     }
@@ -225,6 +224,7 @@
       var email    = document.getElementById('email').value.trim();
       var password = document.getElementById('password').value;
       var errorEl  = document.getElementById('error-msg');
+      var btn      = document.querySelector('.btn-main');
       errorEl.classList.remove('show');
 
       if (!email || !password) {
@@ -233,28 +233,29 @@
         return;
       }
 
-      var result = loginUser(email, password);
+      btn.textContent = 'Signing in…';
+      btn.disabled    = true;
 
-      if (result !== true) {
-        errorEl.textContent = result;
-        errorEl.classList.add('show');
-        return;
-      }
+      loginUser(email, password).then(function(result) {
+        btn.textContent = 'Log In';
+        btn.disabled    = false;
 
-      // Handle remember me
-      var rememberChecked = document.getElementById('remember-me').checked;
-      var user = getCurrentUser();
+        if (result !== true) {
+          errorEl.textContent = result;
+          errorEl.classList.add('show');
+          return;
+        }
 
-      if (rememberChecked && user) {
-        localStorage.setItem('nf360_remember', JSON.stringify({
-          name:  user.name,
-          email: user.email
-        }));
-      } else if (!rememberChecked) {
-        localStorage.removeItem('nf360_remember');
-      }
+        // Handle remember me
+        var user = getCurrentUser();
+        if (document.getElementById('remember-me').checked && user) {
+          setRemembered(user.name, user.email);
+        } else {
+          clearRemembered();
+        }
 
-      window.location.href = (user.role === 'clinician') ? 'pages/clinician.html' : 'index.html';
+        window.location.href = (user && user.role === 'clinician') ? 'pages/clinician.html' : 'index.html';
+      });
     }
 
     document.querySelectorAll('.form-input').forEach(function(i) {

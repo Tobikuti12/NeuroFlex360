@@ -1,98 +1,13 @@
 // =========================================
-//  auth.js – Simple Multi-User System
+//  auth.js – Firebase Backend
 //  NeuroFlex360 | Middlesex University Dubai
-//
-//  Stores all users in localStorage.
-//  Each user has their own scores.
-//  No backend needed yet — prototype only.
 // =========================================
 
-// Get all registered users
-function getUsers() {
-  return JSON.parse(localStorage.getItem('nf360_users') || '[]');
-}
+var _currentUser  = null;
+var _authReady    = false;
+var _cachedScores = {};
+var _cachedStreak = { count: 0, lastDate: null };
 
-// Get the currently logged-in user
-function getCurrentUser() {
-  var id = localStorage.getItem('nf360_current');
-  if (!id) return null;
-  return getUsers().find(function(u) { return u.id === id; }) || null;
-}
-
-// Register a new user — returns true or an error message
-function registerUser(name, email, password, role, age, medicalCategory, specialisation, institution, licence) {
-  var users = getUsers();
-
-  var taken = users.find(function(u) {
-    return u.email.toLowerCase() === email.toLowerCase();
-  });
-
-  if (taken) return 'An account with this email already exists.';
-
-  var newUser = {
-    id:        Date.now().toString(),
-    name:      name,
-    email:     email.toLowerCase(),
-    password:  password,
-    role:      role,
-    age:             age             || null,
-    medicalCategory: medicalCategory || null,
-    specialisation:  specialisation  || null,
-    institution:     institution     || null,
-    licence:         licence         || null,
-    createdAt:       new Date().toISOString()
-  };
-
-  users.push(newUser);
-  localStorage.setItem('nf360_users', JSON.stringify(users));
-
-  // NOTE: We do NOT log them in yet — session is set after email verification
-  // Store the pending user ID so verify-email.html can log them in
-  localStorage.setItem('nf360_pending_id', newUser.id);
-  return true;
-}
-
-// Log in — returns true or an error message
-function loginUser(email, password) {
-  var users = getUsers();
-  var user  = users.find(function(u) {
-    return u.email.toLowerCase() === email.toLowerCase() && u.password === password;
-  });
-
-  if (!user) return 'Incorrect email or password.';
-
-  localStorage.setItem('nf360_current', user.id);
-  return true;
-}
-
-// Log out
-function logoutUser() {
-  localStorage.removeItem('nf360_current');
-  window.location.href = 'login.html';
-}
-
-// Redirect to login if not signed in
-function requireAuth() {
-  var user = getCurrentUser();
-  if (!user) { window.location.href = 'login.html'; return null; }
-  return user;
-}
-
-// Get scores for the current user only
-function getUserScores() {
-  var user = getCurrentUser();
-  if (!user) return {};
-  return JSON.parse(localStorage.getItem('nf360_scores_' + user.id) || '{}');
-}
-
-// Save scores for the current user only
-function saveUserScores(data) {
-  var user = getCurrentUser();
-  if (!user) return;
-  localStorage.setItem('nf360_scores_' + user.id, JSON.stringify(data));
-}
-
-// ---- Difficulty helpers (used by all game pages) ----
 var DIFFICULTY_LABELS  = { 1: 'Easy', 2: 'Medium', 3: 'Hard' };
 var DIFFICULTY_COLOURS = { 1: '#3b6d11', 2: '#ba7517', 3: '#a32d2d' };
 
@@ -100,98 +15,274 @@ function getDifficultyLabel(level) {
   return 'Level ' + level + ' · ' + DIFFICULTY_LABELS[level];
 }
 
-function getDifficultyLevel(module) {
-  var data    = getUserScores();
-  var entries = data[module] || [];
+// ---- AUTH STATE ----
+fbAuth.onAuthStateChanged(function(firebaseUser) {
+  _authReady = true;
+  if (!firebaseUser) { _currentUser = null; return; }
 
-  // First session ever — start at Level 1
-  if (entries.length === 0) return 1;
+  fbDB.collection('users').doc(firebaseUser.uid).get()
+    .then(function(doc) {
+      if (doc.exists) {
+        _currentUser    = doc.data();
+        _currentUser.id = doc.id;
+        loadUserData(firebaseUser.uid);
+      } else {
+        _currentUser = null;
+      }
+    });
+});
 
-  var last = entries[entries.length - 1].level || 1;
+function getCurrentUser() { return _currentUser; }
 
-  // Need at least 2 sessions to judge
-  if (entries.length < 2) return last;
+function requireAuth(redirectTo) {
+  redirectTo = redirectTo || 'login.html';
 
-  // Look at the last 2 sessions
-  var recent = entries.slice(-2).map(function(e) { return e.score; });
+  // Wait up to 3 seconds for Firebase to confirm auth state
+  var attempts = 0;
+  var check = setInterval(function() {
+    attempts++;
+    if (_authReady) {
+      clearInterval(check);
+      if (!fbAuth.currentUser) {
+        window.location.href = redirectTo;
+      }
+    }
+    if (attempts > 30) {
+      clearInterval(check);
+      window.location.href = redirectTo;
+    }
+  }, 100);
 
-  // Both above 75 — step up
-  if (recent.every(function(s) { return s >= 75; }) && last < 3) return last + 1;
-
-  // Both below 50 — step down
-  if (recent.every(function(s) { return s <  50; }) && last > 1) return last - 1;
-
-  return last;
+  return _currentUser;
 }
 
-// Returns the level the NEXT session should use (call after saving score)
-function getNextDifficultyLevel(module) {
-  return getDifficultyLevel(module);
+// ---- REGISTRATION ----
+function registerUser(name, email, password, role, age, medicalCategory, specialisation, institution, licence) {
+  return fbAuth.createUserWithEmailAndPassword(email, password)
+    .then(function(credential) {
+      var uid  = credential.user.uid;
+      var user = credential.user;
+
+      // Send Firebase verification email
+      return user.sendEmailVerification()
+        .then(function() {
+          var profile = {
+            name:            name,
+            email:           email.toLowerCase(),
+            role:            role,
+            age:             age             || null,
+            medicalCategory: medicalCategory || null,
+            specialisation:  specialisation  || null,
+            institution:     institution     || null,
+            licence:         licence         || null,
+            verified:        false,
+            createdAt:       firebase.firestore.FieldValue.serverTimestamp()
+          };
+          return fbDB.collection('users').doc(uid).set(profile);
+        })
+        .then(function() {
+          // Sign out immediately — must verify email first
+          return fbAuth.signOut();
+        })
+        .then(function() { return true; });
+    })
+    .catch(function(err) {
+      if (err.code === 'auth/email-already-in-use') return 'An account with this email already exists.';
+      if (err.code === 'auth/invalid-email')         return 'Please enter a valid email address.';
+      if (err.code === 'auth/weak-password')          return 'Password must be at least 6 characters.';
+      return err.message || 'Something went wrong. Please try again.';
+    });
+}
+
+// ---- LOGIN ----
+function loginUser(email, password) {
+  return fbAuth.signInWithEmailAndPassword(email, password)
+    .then(function(credential) {
+      var user = credential.user;
+
+      if (!user.emailVerified) {
+        return fbAuth.signOut().then(function() {
+          return 'Please verify your email before logging in. Check your inbox for the verification link.';
+        });
+      }
+
+      return fbDB.collection('users').doc(user.uid).get()
+        .then(function(doc) {
+          if (!doc.exists) {
+            return fbAuth.signOut().then(function() {
+              return 'Account profile not found. Please sign up again.';
+            });
+          }
+          _currentUser    = doc.data();
+          _currentUser.id = doc.id;
+
+          if (!_currentUser.verified) {
+            fbDB.collection('users').doc(user.uid).update({ verified: true });
+            _currentUser.verified = true;
+          }
+
+          // Cache user name for faster UI display on next page load
+          sessionStorage.setItem('nf360_user_name', _currentUser.name);
+
+          return loadUserData(user.uid).then(function() { return true; });
+        });
+    })
+    .catch(function(err) {
+      if (err.code === 'auth/user-not-found'    ||
+          err.code === 'auth/wrong-password'     ||
+          err.code === 'auth/invalid-credential') {
+        return 'Incorrect email or password.';
+      }
+      if (err.code === 'auth/too-many-requests') {
+        return 'Too many attempts. Please wait a few minutes and try again.';
+      }
+      return err.message || 'Something went wrong. Please try again.';
+    });
+}
+
+// ---- LOGOUT ----
+function logoutUser() {
+  _currentUser  = null;
+  _cachedScores = {};
+  _cachedStreak = { count: 0, lastDate: null };
+  sessionStorage.removeItem('nf360_user_name');
+  fbAuth.signOut().then(function() {
+    window.location.href = 'login.html';
+  });
+}
+
+// ---- PASSWORD RESET ----
+function sendPasswordReset(email) {
+  return fbAuth.sendPasswordResetEmail(email)
+    .then(function() { return true; })
+    .catch(function(err) {
+      if (err.code === 'auth/user-not-found') return true; // silent — don't reveal
+      if (err.code === 'auth/invalid-email')  return 'Please enter a valid email address.';
+      return err.message || 'Something went wrong.';
+    });
+}
+
+// ---- SCORES ----
+function getUserScores() { return _cachedScores; }
+
+function _loadScores(uid) {
+  return fbDB.collection('users').doc(uid).collection('scores').get()
+    .then(function(snap) {
+      var scores = {};
+      snap.forEach(function(doc) { scores[doc.id] = doc.data().sessions || []; });
+      _cachedScores = scores;
+      return scores;
+    });
 }
 
 function saveScoreWithLevel(module, score, level) {
-  var data = getUserScores();
-  if (!data[module]) data[module] = [];
-  data[module].push({ score: score, level: level, date: new Date().toISOString() });
-  if (data[module].length > 10) data[module] = data[module].slice(-10);
-  saveUserScores(data);
-}
-
-// =========================================
-//  STREAK TRACKING
-//  A streak day = at least one module completed that day.
-//  Saved per user under nf360_streak_[userId]
-// =========================================
-
-function getStreakData() {
-  var user = getCurrentUser();
-  if (!user) return { count: 0, lastDate: null };
-  return JSON.parse(localStorage.getItem('nf360_streak_' + user.id) || '{"count":0,"lastDate":null}');
-}
-
-function saveStreakData(data) {
-  var user = getCurrentUser();
+  var user = fbAuth.currentUser;
   if (!user) return;
-  localStorage.setItem('nf360_streak_' + user.id, JSON.stringify(data));
+
+  var entry = { score: score, level: level, date: new Date().toISOString() };
+
+  if (!_cachedScores[module]) _cachedScores[module] = [];
+  _cachedScores[module].push(entry);
+  if (_cachedScores[module].length > 10) _cachedScores[module] = _cachedScores[module].slice(-10);
+
+  var ref = fbDB.collection('users').doc(user.uid).collection('scores').doc(module);
+  ref.get().then(function(doc) {
+    var sessions = doc.exists ? (doc.data().sessions || []) : [];
+    sessions.push(entry);
+    if (sessions.length > 10) sessions = sessions.slice(-10);
+    return ref.set({ sessions: sessions }, { merge: true });
+  }).catch(function(err) { console.error('Error saving score:', err); });
 }
 
-// Call this whenever a session is completed
-function updateStreak() {
-  var today  = new Date().toDateString();
-  var streak = getStreakData();
+// ---- DIFFICULTY ----
+function getDifficultyLevel(module) {
+  var entries = _cachedScores[module] || [];
+  if (entries.length === 0) return 1;
+  var last = entries[entries.length - 1].level || 1;
+  if (entries.length < 2) return last;
+  var recent = entries.slice(-2).map(function(e) { return e.score; });
+  if (recent.every(function(s) { return s >= 75; }) && last < 3) return last + 1;
+  if (recent.every(function(s) { return s <  50; }) && last > 1) return last - 1;
+  return last;
+}
 
-  if (streak.lastDate === today) {
-    // Already logged today — no change needed
-    return streak.count;
-  }
+function getNextDifficultyLevel(module) { return getDifficultyLevel(module); }
 
-  var yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 1);
-  var wasYesterday = streak.lastDate === yesterday.toDateString();
-
-  if (wasYesterday) {
-    // Continued streak
-    streak.count += 1;
-  } else {
-    // Streak broken or first time — reset to 1
-    streak.count = 1;
-  }
-
-  streak.lastDate = today;
-  saveStreakData(streak);
-  return streak.count;
+// ---- STREAK ----
+function _loadStreak(uid) {
+  return fbDB.collection('users').doc(uid).collection('streak').doc('current').get()
+    .then(function(doc) {
+      if (doc.exists) _cachedStreak = doc.data();
+      return _cachedStreak;
+    });
 }
 
 function getStreak() {
-  var today  = new Date().toDateString();
-  var streak = getStreakData();
-
-  // If last activity wasn't today or yesterday, streak is broken
+  var today     = new Date().toDateString();
   var yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
+  if (_cachedStreak.lastDate !== today &&
+      _cachedStreak.lastDate !== yesterday.toDateString()) return 0;
+  return _cachedStreak.count || 0;
+}
 
-  if (streak.lastDate !== today && streak.lastDate !== yesterday.toDateString()) {
-    return 0;
-  }
+function updateStreak() {
+  var user  = fbAuth.currentUser;
+  if (!user) return;
+
+  var today   = new Date().toDateString();
+  var streak  = Object.assign({}, _cachedStreak);
+  if (streak.lastDate === today) return streak.count;
+
+  var yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  streak.count   = streak.lastDate === yesterday.toDateString() ? (streak.count || 0) + 1 : 1;
+  streak.lastDate = today;
+  _cachedStreak   = streak;
+
+  fbDB.collection('users').doc(user.uid).collection('streak').doc('current')
+      .set(streak)
+      .catch(function(err) { console.error('Error saving streak:', err); });
+
   return streak.count;
+}
+
+// ---- LOAD ALL DATA after login ----
+function loadUserData(uid) {
+  return Promise.all([ _loadScores(uid), _loadStreak(uid) ]);
+}
+
+// ---- REMEMBER ME (localStorage only — UI convenience) ----
+function getRemembered()          { return JSON.parse(localStorage.getItem('nf360_remember') || 'null'); }
+function setRemembered(name, em)  { localStorage.setItem('nf360_remember', JSON.stringify({ name: name, email: em })); }
+function clearRemembered()        { localStorage.removeItem('nf360_remember'); }
+
+// ---- THERAPIST: GET PATIENTS ----
+function getAllPatients() {
+  return fbDB.collection('users').where('role', '==', 'patient').get()
+    .then(function(snap) {
+      var list = [];
+      snap.forEach(function(doc) { var d = doc.data(); d.id = doc.id; list.push(d); });
+      return list;
+    });
+}
+
+function getPatientScores(uid) {
+  return fbDB.collection('users').doc(uid).collection('scores').get()
+    .then(function(snap) {
+      var scores = {};
+      snap.forEach(function(doc) { scores[doc.id] = doc.data().sessions || []; });
+      return scores;
+    });
+}
+
+function getPatientStreak(uid) {
+  return fbDB.collection('users').doc(uid).collection('streak').doc('current').get()
+    .then(function(doc) {
+      if (!doc.exists) return { count: 0, lastDate: null };
+      var s = doc.data(), today = new Date().toDateString();
+      var yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
+      if (s.lastDate !== today && s.lastDate !== yesterday.toDateString()) return { count: 0, lastDate: s.lastDate };
+      return s;
+    });
 }

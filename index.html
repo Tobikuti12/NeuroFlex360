@@ -15,7 +15,7 @@
       <div class="logo-mark">NF</div>
       <div>
         <p class="header-sub">Welcome back,</p>
-        <h1 class="header-name" id="header-name">Patient</h1>
+        <h1 class="header-name" id="header-name"></h1>
       </div>
     </div>
     <div class="header-right">
@@ -105,30 +105,90 @@
     </a>
   </nav>
 
+    <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="js/firebase-config.js"></script>
   <script src="js/auth.js"></script>
   <script>
-    var user = getCurrentUser();
-    if (!user) { window.location.href = 'welcome.html'; }
-    else {
-      // First-time user — send to onboarding before dashboard
-      var onboarded = localStorage.getItem('nf360_onboarded_' + user.id);
-      if (!onboarded) {
-        window.location.href = 'onboarding.html';
-      }
-      document.getElementById('header-name').textContent = user.name.split(' ')[0];
+    // Show cached name immediately for faster UI display
+    var cachedName = sessionStorage.getItem('nf360_user_name');
+    if (cachedName) {
+      document.getElementById('header-name').textContent = cachedName.split(' ')[0];
     }
 
-    // ---- STREAK ----
-    var streakCount = getStreak();
-    var streakBadge = document.getElementById('streak-badge');
-    if (streakCount === 0) {
-      streakBadge.textContent = '🌱 Start your streak today!';
-      streakBadge.style.background = 'rgba(255,255,255,0.08)';
-      streakBadge.style.borderColor = 'rgba(255,255,255,0.15)';
-      streakBadge.style.color = 'rgba(255,255,255,0.6)';
-    } else {
-      streakBadge.textContent = '🔥 ' + streakCount + '-day streak';
+    // Wait for Firebase auth state
+    fbAuth.onAuthStateChanged(function(firebaseUser) {
+      if (!firebaseUser || !firebaseUser.emailVerified) {
+        window.location.href = 'welcome.html';
+        return;
+      }
+
+      // Load user profile if not already loaded
+      var loadProfile = _currentUser
+        ? Promise.resolve(_currentUser)
+        : fbDB.collection('users').doc(firebaseUser.uid).get().then(function(doc) {
+            if (!doc.exists) { window.location.href = 'welcome.html'; return null; }
+            _currentUser    = doc.data();
+            _currentUser.id = doc.id;
+            return _currentUser;
+          });
+
+      loadProfile.then(function(user) {
+        if (!user) return;
+
+        document.getElementById('header-name').textContent = user.name.split(' ')[0];
+
+        // Load scores then update cards
+        loadUserData(firebaseUser.uid).then(function() {
+          updateDashboardCards();
+        });
+      });
+    });
+
+    function updateDashboardCards() {
+      var LABELS   = { 1: 'Easy', 2: 'Medium', 3: 'Hard' };
+
+      function getLatest(module) {
+        var entries = (_cachedScores[module] || []);
+        return entries.length ? entries[entries.length - 1] : null;
+      }
+
+      var memLatest = getLatest('memory');
+      var memLevel  = getDifficultyLevel('memory');
+      if (memLatest) {
+        document.getElementById('mem-score-val').textContent = memLatest.score;
+        document.getElementById('mem-bar').style.width       = memLatest.score + '%';
+      }
+      document.getElementById('mem-level-badge').textContent = 'Lv.' + memLevel + ' ' + LABELS[memLevel];
+
+      var attLatest = getLatest('attention');
+      var attLevel  = getDifficultyLevel('attention');
+      if (attLatest) {
+        document.getElementById('att-score-val').textContent = attLatest.score;
+        document.getElementById('att-bar').style.width       = attLatest.score + '%';
+      }
+      document.getElementById('att-level-badge').textContent = 'Lv.' + attLevel + ' ' + LABELS[attLevel];
+
+      var rtLatest = getLatest('reaction');
+      if (rtLatest) {
+        document.getElementById('rt-score-val').textContent = rtLatest.score + 'ms';
+      }
+      document.getElementById('rt-level-badge').textContent = 'Lv.' + getDifficultyLevel('reaction') + ' ' + LABELS[getDifficultyLevel('reaction')];
+
+      // Streak
+      var streakCount = getStreak();
+      var streakBadge = document.getElementById('streak-badge');
+      if (streakCount === 0) {
+        streakBadge.textContent = '🌱 Start your streak today!';
+        streakBadge.style.color = 'rgba(255,255,255,0.5)';
+      } else {
+        streakBadge.textContent = '🔥 ' + streakCount + '-day streak';
+      }
     }
+
+
 
     function openStreakModal() {
       var modal    = document.getElementById('streak-modal');

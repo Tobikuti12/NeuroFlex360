@@ -265,6 +265,11 @@
     <p class="auth-footer" style="margin-top:14px;">Already have an account? <a href="login.html">Log in</a></p>
   </div>
 
+    <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="js/firebase-config.js"></script>
   <script src="js/auth.js"></script>
   <script>
     var selectedRole = null;
@@ -317,22 +322,25 @@
       var instVal  = selectedRole === 'clinician' ? document.getElementById('institution').value.trim() : null;
       var licVal   = selectedRole === 'clinician' ? document.getElementById('licence').value.trim() : null;
 
-      var result = registerUser(name, email, pw, selectedRole, ageVal, medVal, specVal, instVal, licVal);
+      var btn = document.querySelector('.btn-signup');
+      btn.textContent = 'Creating account…';
+      btn.disabled    = true;
 
-      if (result !== true) {
-        var errEl = document.getElementById('error-msg');
-        errEl.textContent = result;
-        errEl.classList.add('show');
-        return;
-      }
+      registerUser(name, email, pw, selectedRole, ageVal, medVal, specVal, instVal, licVal)
+        .then(function(result) {
+          btn.textContent = 'Create Account →';
+          btn.disabled    = false;
 
-      // Generate verification code
-      var verifyCode = Math.floor(100000 + Math.random() * 900000).toString();
-      localStorage.setItem('nf360_verify_code',  verifyCode);
-      localStorage.setItem('nf360_verify_email', email.toLowerCase());
-      // In production: send verifyCode to email via backend API
+          if (result !== true) {
+            var errEl = document.getElementById('error-msg');
+            errEl.textContent = result;
+            errEl.classList.add('show');
+            return;
+          }
 
-      window.location.href = 'verify-email.html?email=' + encodeURIComponent(email) + '&name=' + encodeURIComponent(name.split(' ')[0]);
+          // Firebase has sent the verification email automatically
+          window.location.href = 'verify-email.html?email=' + encodeURIComponent(email) + '&name=' + encodeURIComponent(name.split(' ')[0]);
+        });
     }
 
     function show(id) { document.getElementById(id).classList.add('show'); }
