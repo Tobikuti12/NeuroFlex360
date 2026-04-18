@@ -12,12 +12,12 @@
 // =========================================
 
 const firebaseConfig = {
-  apiKey:            "YOUR_API_KEY",
-  authDomain:        "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId:         "YOUR_PROJECT_ID",
-  storageBucket:     "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId:             "YOUR_APP_ID"
+  apiKey: "AIzaSyBRchd7iLVhqGhTuHbT7QlOPDpe2ur8fys",
+  authDomain: "neuroflex360-c7e1a.firebaseapp.com",
+  projectId: "neuroflex360-c7e1a",
+  storageBucket: "neuroflex360-c7e1a.firebasestorage.app",
+  messagingSenderId: "825776368689",
+  appId: "1:825776368689:web:24f1784beaeb0f5db7b910"
 };
 
 // Initialise Firebase
