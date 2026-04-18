@@ -434,3 +434,204 @@ a { text-decoration: none; color: inherit; }
 
 /* Touch targets — min 44px for elderly users */
 .choice-btn, .btn-primary, .btn-secondary, .back-btn, .nav-item, .rt-circle { min-height: 44px; }
+
+/* =========================================
+   RESPONSIVE & ANIMATION IMPROVEMENTS
+   ========================================= */
+
+/* ---- Smooth transitions everywhere ---- */
+*, *::before, *::after {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ---- App shell centres on desktop ---- */
+@media (min-width: 600px) {
+  html { background: #070d1a; }
+  body {
+    max-width: 480px;
+    margin: 0 auto;
+    min-height: 100vh;
+    box-shadow: 0 0 80px rgba(0,0,0,0.6);
+  }
+  .bottom-nav {
+    max-width: 480px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+}
+
+/* ---- Module cards — smooth hover on desktop ---- */
+.module-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+@media (hover: hover) {
+  .module-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 32px rgba(0,0,0,0.45);
+    border-color: rgba(78,204,163,0.35);
+  }
+}
+.module-card:active { transform: scale(0.98); }
+
+/* ---- Buttons — smooth press ---- */
+.btn-primary, .btn-secondary, .btn-main, .ob-btn-main {
+  transition: opacity 0.2s ease, transform 0.15s ease;
+}
+.btn-primary:active, .btn-main:active, .ob-btn-main:active { transform: scale(0.97); }
+
+/* ---- Progress bars ---- */
+.progress-fill { transition: width 0.6s cubic-bezier(0.4,0,0.2,1); }
+.cpb-fill      { transition: width 0.7s cubic-bezier(0.4,0,0.2,1); }
+.mr-bar        { transition: width 0.7s cubic-bezier(0.4,0,0.2,1); }
+.chart-bar     { transition: height 0.5s cubic-bezier(0.4,0,0.2,1); }
+
+/* ---- Score value fade-in ---- */
+@keyframes scoreAppear {
+  from { opacity: 0; transform: translateY(5px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.score-loaded { animation: scoreAppear 0.4s ease both; }
+
+/* ---- Modal backdrop + box animation ---- */
+.modal-backdrop {
+  opacity: 0; visibility: hidden;
+  transition: opacity 0.25s ease, visibility 0.25s ease;
+}
+.modal-backdrop.open { opacity: 1; visibility: visible; }
+.modal-box {
+  transform: translateY(20px) scale(0.97);
+  transition: transform 0.25s ease;
+}
+.modal-backdrop.open .modal-box { transform: translateY(0) scale(1); }
+
+/* ---- Game choice buttons (attention) ---- */
+.choice-btn {
+  transition: transform 0.12s ease, background 0.15s ease, border-color 0.15s ease;
+}
+@media (hover: hover) {
+  .choice-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    border-color: var(--accent);
+    background: var(--surface2);
+  }
+}
+
+/* ---- Memory cards ---- */
+.mem-card { transition: transform 0.15s ease, border-color 0.2s ease; }
+.mem-card:hover { transform: scale(1.04); }
+
+/* ---- Reaction circle ---- */
+.rt-circle { transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease; }
+.rt-circle:active { transform: scale(0.95); }
+
+/* ---- Streak badge ---- */
+.streak-badge {
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+@media (hover: hover) {
+  .streak-badge:hover { background: rgba(78,204,163,0.2); }
+}
+
+/* ---- Page fade-in on load ---- */
+@keyframes pageFade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.page-ready { animation: pageFade 0.3s ease both; }
+
+/* =========================================
+   RESPONSIVE — full overhaul
+   ========================================= */
+
+/* ---- Desktop wrapper ---- */
+@media (min-width: 600px) {
+  html { background: #070d1a; }
+
+  body {
+    background: #070d1a;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* App shell card — centred on desktop */
+  body > *,
+  .page-wrap {
+    width: 100%;
+    max-width: 480px;
+  }
+
+  /* Fixed nav stays centred */
+  .bottom-nav {
+    max-width: 480px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-radius: 0;
+  }
+
+  /* Module cards — slightly larger on desktop */
+  .module-card  { padding: 18px 16px; }
+  .card-icon    { width: 56px; height: 56px; font-size: 30px; }
+
+  /* Auth pages */
+  .auth-card { border-radius: 20px; }
+}
+
+/* ---- Smooth hover only on devices with a pointer ---- */
+@media (hover: hover) and (pointer: fine) {
+  .module-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 14px 36px rgba(0,0,0,0.5);
+    border-color: rgba(78,204,163,0.4);
+  }
+  .btn-primary:hover  { opacity: 0.88; transform: translateY(-1px); }
+  .btn-secondary:hover { background: var(--surface2); }
+  .choice-btn:hover:not(:disabled) { transform: translateY(-2px); border-color: var(--accent); }
+  .ob-btn-main:hover  { opacity: 0.88; transform: translateY(-1px); }
+}
+
+/* ---- Tap feedback on touch ---- */
+.module-card:active  { transform: scale(0.98) !important; transition: transform 0.1s ease; }
+.btn-primary:active  { transform: scale(0.97) !important; }
+.choice-btn:active   { transform: scale(0.95) !important; }
+
+/* ---- Smooth transitions everywhere ---- */
+.module-card  { transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease; }
+.btn-primary  { transition: opacity 0.2s ease, transform 0.15s ease; }
+.progress-fill, .cpb-fill, .mr-bar { transition: width 0.65s cubic-bezier(0.4,0,0.2,1); }
+.chart-bar    { transition: height 0.5s cubic-bezier(0.4,0,0.2,1); }
+
+/* ---- Modal animation ---- */
+.modal-backdrop {
+  opacity: 0; visibility: hidden;
+  transition: opacity 0.25s ease, visibility 0.25s ease;
+}
+.modal-backdrop.open { opacity: 1; visibility: visible; }
+.modal-box {
+  transform: translateY(20px) scale(0.96);
+  transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1);
+}
+.modal-backdrop.open .modal-box { transform: translateY(0) scale(1); }
+
+/* ---- Page fade in ---- */
+@keyframes pageFade {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+body.ready { animation: pageFade 0.3s ease both; }
+
+/* ---- Score number pop ---- */
+@keyframes scorePop {
+  0%   { opacity: 0; transform: scale(0.8); }
+  60%  { transform: scale(1.1); }
+  100% { opacity: 1; transform: scale(1); }
+}
+.score-loaded { animation: scorePop 0.4s ease both; }
+
+/* ---- Congrats overlay ---- */
+@keyframes congratsFade {
+  from { opacity: 0; transform: scale(0.94); }
+  to   { opacity: 1; transform: scale(1); }
+}
+#congrats-overlay { animation: congratsFade 0.35s ease; }

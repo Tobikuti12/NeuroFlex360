@@ -193,7 +193,7 @@
     <button class="btn-secondary" onclick="window.location.href='signup.html'">Create a New Account</button>
   </div>
 
-  <p class="auth-footer" style="margin-top:20px;"><a href='welcome.html'>← Back to home</a> &nbsp;·&nbsp; NeuroFlex360 &copy; Middlesex University Dubai</p>
+  <p class="auth-footer" style="margin-top:20px;"><a href='welcome.html'>← Back to home</a> &nbsp;·&nbsp; NeuroFlex360 &copy; NeuroFlex360</p>
 
     <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -202,6 +202,13 @@
   <script src="js/firebase-config.js"></script>
   <script src="js/auth.js"></script>
   <script>
+    // If already logged in, skip straight to dashboard
+    fbAuth.onAuthStateChanged(function(user) {
+      if (user && user.emailVerified) {
+        window.location.href = 'index.html';
+      }
+    });
+
     // Remember me — pre-fill email
     var remembered = getRemembered();
     if (remembered) {

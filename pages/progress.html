@@ -6,6 +6,18 @@
   <title>Progress – NeuroFlex360</title>
   <link rel="stylesheet" href="../css/style.css" />
   <link rel="stylesheet" href="../css/progress.css" />
+  <style>
+    body { visibility: hidden; opacity: 0; transition: opacity 0.3s ease; }
+    body.ready { visibility: visible; opacity: 1; }
+    /* Smooth bar transitions */
+    .mr-bar { transition: width 0.7s cubic-bezier(0.4,0,0.2,1); }
+    .chart-bar { transition: height 0.5s cubic-bezier(0.4,0,0.2,1); }
+    /* Responsive */
+    @media (min-width: 600px) {
+      body > * { max-width: 480px; margin: 0 auto; }
+      .bottom-nav { max-width: 480px; left: 50%; transform: translateX(-50%); }
+    }
+  </style>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
 </head>
 <body>
@@ -121,7 +133,7 @@
       <span class="nav-icon">📊</span>
       <span>Progress</span>
     </a>
-    <a href="#" class="nav-item">
+    <a href="profile.html" class="nav-item">
       <span class="nav-icon">👤</span>
       <span>Profile</span>
     </a>
@@ -134,11 +146,7 @@
   <script src="../js/firebase-config.js"></script>
   <script src="../js/auth.js"></script>
   <script>
-    // Therapists should not see this page — send them to their dashboard
-    var user = requireAuth();
-    if (user && user.role === 'clinician') {
-      window.location.href = 'clinician.html';
-    }
+    // Handled in progress.js initProgress()
   </script>
   <script src="../js/progress.js"></script>
 </body>

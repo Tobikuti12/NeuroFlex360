@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Profile – NeuroFlex360</title>
+  <link rel="stylesheet" href="../css/style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    body { visibility: hidden; opacity: 0; transition: opacity 0.3s ease; padding-bottom: 90px; }
+    body.ready { visibility: visible; opacity: 1; }
+
+    /* ---- RESPONSIVE ---- */
+    @media (min-width: 600px) {
+      body { background: #0a0f1e; }
+      .page-wrap { max-width: 480px; margin: 0 auto; min-height: 100vh; }
+      .bottom-nav { max-width: 480px; left: 50%; transform: translateX(-50%); }
+    }
+
+    /* ---- PROFILE HEADER ---- */
+    .profile-header {
+      background: linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%);
+      padding: 24px 20px 28px;
+      text-align: center;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .profile-avatar {
+      width: 72px; height: 72px;
+      background: var(--accent);
+      color: var(--dark);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 28px; font-weight: 700;
+      margin: 0 auto 14px;
+      box-shadow: 0 4px 20px rgba(78,204,163,0.35);
+    }
+
+    .profile-name {
+      font-size: 20px; font-weight: 600;
+      color: white; margin-bottom: 4px;
+    }
+    .profile-role-badge {
+      display: inline-block;
+      background: rgba(78,204,163,0.15);
+      border: 1px solid rgba(78,204,163,0.3);
+      color: var(--accent);
+      border-radius: 20px;
+      padding: 3px 12px;
+      font-size: 12px; font-weight: 500;
+      margin-bottom: 6px;
+    }
+    .profile-email {
+      font-size: 13px; color: rgba(255,255,255,0.45);
+    }
+
+    /* ---- SECTIONS ---- */
+    .profile-section {
+      background: var(--surface);
+      margin: 14px 14px 0;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+
+    .profile-section-title {
+      font-size: 11px; font-weight: 600;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--text2);
+      padding: 14px 18px 10px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .profile-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border2);
+    }
+    .profile-row:last-child { border-bottom: none; }
+
+    .pr-label {
+      font-size: 13px; color: var(--text2);
+      display: flex; align-items: center; gap: 8px;
+    }
+    .pr-value {
+      font-size: 14px; font-weight: 500; color: var(--text);
+      text-align: right; max-width: 60%;
+    }
+    .pr-value.accent { color: var(--accent); }
+    .pr-value.muted  { color: var(--text2); font-style: italic; }
+
+    /* ---- STATS ROW ---- */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0;
+    }
+
+    .stat-cell {
+      padding: 16px 10px;
+      text-align: center;
+      border-right: 1px solid var(--border2);
+    }
+    .stat-cell:last-child { border-right: none; }
+
+    .stat-cell-val { font-size: 22px; font-weight: 700; color: var(--accent); }
+    .stat-cell-lbl { font-size: 11px; color: var(--text2); margin-top: 3px; }
+
+    /* ---- LOGOUT BUTTON ---- */
+    .logout-btn {
+      display: block;
+      width: calc(100% - 28px);
+      margin: 16px 14px;
+      padding: 14px;
+      background: rgba(239,68,68,0.1);
+      border: 1px solid rgba(239,68,68,0.25);
+      color: #ef4444;
+      border-radius: 12px;
+      font-size: 15px; font-weight: 600;
+      font-family: var(--font);
+      cursor: pointer;
+      transition: background 0.2s;
+      text-align: center;
+    }
+    .logout-btn:hover { background: rgba(239,68,68,0.18); }
+
+    /* ---- ANIMATION ---- */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .profile-section { animation: fadeUp 0.35s ease both; }
+    .profile-section:nth-child(2) { animation-delay: 0.05s; }
+    .profile-section:nth-child(3) { animation-delay: 0.10s; }
+    .profile-section:nth-child(4) { animation-delay: 0.15s; }
+  </style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <!-- HEADER -->
+  <div class="profile-header">
+    <div class="profile-avatar" id="profile-avatar">?</div>
+    <div class="profile-name"   id="profile-name">Loading…</div>
+    <div class="profile-role-badge" id="profile-role-badge">Patient</div>
+    <div class="profile-email"  id="profile-email"></div>
+  </div>
+
+  <!-- ACTIVITY STATS -->
+  <div class="profile-section">
+    <div class="profile-section-title">Training Activity</div>
+    <div class="stats-row">
+      <div class="stat-cell">
+        <div class="stat-cell-val" id="stat-sessions">--</div>
+        <div class="stat-cell-lbl">Sessions</div>
+      </div>
+      <div class="stat-cell">
+        <div class="stat-cell-val" id="stat-streak">--</div>
+        <div class="stat-cell-lbl">Day Streak</div>
+      </div>
+      <div class="stat-cell">
+        <div class="stat-cell-val" id="stat-avg">--</div>
+        <div class="stat-cell-lbl">Avg Score</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PERSONAL INFO -->
+  <div class="profile-section">
+    <div class="profile-section-title">Personal Information</div>
+    <div class="profile-row">
+      <div class="pr-label">👤 Full Name</div>
+      <div class="pr-value" id="pf-name">—</div>
+    </div>
+    <div class="profile-row">
+      <div class="pr-label">🎂 Age</div>
+      <div class="pr-value" id="pf-age">—</div>
+    </div>
+    <div class="profile-row">
+      <div class="pr-label">📧 Email</div>
+      <div class="pr-value" id="pf-email">—</div>
+    </div>
+    <div class="profile-row">
+      <div class="pr-label">📅 Member Since</div>
+      <div class="pr-value" id="pf-joined">—</div>
+    </div>
+  </div>
+
+  <!-- MEDICAL INFO -->
+  <div class="profile-section">
+    <div class="profile-section-title">Medical Profile</div>
+    <div class="profile-row">
+      <div class="pr-label">🏥 Condition</div>
+      <div class="pr-value" id="pf-condition">—</div>
+    </div>
+    <div class="profile-row">
+      <div class="pr-label">📊 Current Level</div>
+      <div class="pr-value accent" id="pf-level">—</div>
+    </div>
+    <div class="profile-row">
+      <div class="pr-label">✅ Account Verified</div>
+      <div class="pr-value accent" id="pf-verified">—</div>
+    </div>
+  </div>
+
+  <!-- MODULE BEST SCORES -->
+  <div class="profile-section">
+    <div class="profile-section-title">Best Scores</div>
+    <div class="profile-row">
+      <div class="pr-label">🧠 Memory</div>
+      <div class="pr-value" id="pf-mem-best">—</div>
+    </div>
+    <div class="profile-row">
+      <div class="pr-label">🎯 Attention</div>
+      <div class="pr-value" id="pf-att-best">—</div>
+    </div>
+    <div class="profile-row">
+      <div class="pr-label">⚡ Reaction Time</div>
+      <div class="pr-value" id="pf-rt-best">—</div>
+    </div>
+  </div>
+
+  <!-- LOGOUT -->
+  <button class="logout-btn" onclick="logoutUser()">Sign Out</button>
+
+  <!-- BOTTOM NAV -->
+  <nav class="bottom-nav">
+    <a href="../index.html" class="nav-item">
+      <span class="nav-icon">🏠</span><span>Home</span>
+    </a>
+    <a href="progress.html" class="nav-item">
+      <span class="nav-icon">📊</span><span>Progress</span>
+    </a>
+    <a href="profile.html" class="nav-item active">
+      <span class="nav-icon">👤</span><span>Profile</span>
+    </a>
+  </nav>
+
+</div>
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="../js/firebase-config.js"></script>
+<script src="../js/auth.js"></script>
+<script>
+  var MED_LABELS = {
+    'stroke':        'Post-Stroke Recovery',
+    'dementia':      'Dementia / Alzheimer\'s',
+    'mci':           'Mild Cognitive Impairment',
+    'tbi':           'Traumatic Brain Injury',
+    'parkinsons':    'Parkinson\'s Disease',
+    'healthy-aging': 'Healthy Aging',
+    'other':         'Other'
+  };
+
+  fbAuth.onAuthStateChanged(function(firebaseUser) {
+    if (!firebaseUser || !firebaseUser.emailVerified) {
+      window.location.href = '../welcome.html';
+      return;
+    }
+
+    // Load profile + scores
+    var profilePromise = fbDB.collection('users').doc(firebaseUser.uid).get();
+    var dataPromise    = loadUserData(firebaseUser.uid);
+
+    Promise.all([profilePromise, dataPromise]).then(function(results) {
+      var doc  = results[0];
+      if (!doc.exists) { window.location.href = '../welcome.html'; return; }
+
+      var user = doc.data();
+      var scores = _cachedScores;
+
+      // ---- HEADER ----
+      var initials = user.name
+        ? user.name.split(' ').map(function(n) { return n[0]; }).join('').toUpperCase().slice(0,2)
+        : '?';
+      document.getElementById('profile-avatar').textContent     = initials;
+      document.getElementById('profile-name').textContent       = user.name  || '—';
+      document.getElementById('profile-role-badge').textContent = user.role === 'clinician' ? 'Therapist' : 'Patient';
+      document.getElementById('profile-email').textContent      = user.email || '';
+
+      // ---- STATS ----
+      var totalSessions = ((scores.memory    || []).length) +
+                          ((scores.attention || []).length) +
+                          ((scores.reaction  || []).length);
+      document.getElementById('stat-sessions').textContent = totalSessions;
+      document.getElementById('stat-streak').textContent   = getStreak() || '0';
+
+      var scores2D  = [scores.memory || [], scores.attention || []];
+      var allScores = [];
+      scores2D.forEach(function(arr) { arr.forEach(function(e) { allScores.push(e.score); }); });
+      var avg = allScores.length
+        ? Math.round(allScores.reduce(function(a,b) { return a+b; }, 0) / allScores.length)
+        : '--';
+      document.getElementById('stat-avg').textContent = avg;
+
+      // ---- PERSONAL INFO ----
+      document.getElementById('pf-name').textContent  = user.name  || '—';
+      document.getElementById('pf-age').textContent   = user.age   ? user.age + ' years old' : '—';
+      document.getElementById('pf-email').textContent = user.email || '—';
+
+      var joined = '—';
+      if (user.createdAt) {
+        try {
+          var d = user.createdAt.toDate ? user.createdAt.toDate() : new Date(user.createdAt);
+          joined = d.toLocaleDateString('en-GB', { day:'numeric', month:'long', year:'numeric' });
+        } catch(e) {}
+      }
+      document.getElementById('pf-joined').textContent = joined;
+
+      // ---- MEDICAL INFO ----
+      var condition = user.medicalCategory
+        ? (MED_LABELS[user.medicalCategory] || user.medicalCategory)
+        : '—';
+      document.getElementById('pf-condition').textContent = condition;
+
+      // Overall level — take highest across modules
+      var memLv = getDifficultyLevel('memory');
+      var attLv = getDifficultyLevel('attention');
+      var rtLv  = getDifficultyLevel('reaction');
+      var maxLv = Math.max(memLv, attLv, rtLv);
+      var LV_LABELS = { 1:'Level 1 · Easy', 2:'Level 2 · Medium', 3:'Level 3 · Hard' };
+      document.getElementById('pf-level').textContent    = LV_LABELS[maxLv] || '—';
+      document.getElementById('pf-verified').textContent = firebaseUser.emailVerified ? '✅ Yes' : '⏳ Pending';
+
+      // ---- BEST SCORES ----
+      function getBest(arr) {
+        if (!arr || arr.length === 0) return '—';
+        return Math.max.apply(null, arr.map(function(e) { return e.score; }));
+      }
+      function getBestRT(arr) {
+        if (!arr || arr.length === 0) return '—';
+        return Math.min.apply(null, arr.map(function(e) { return e.score; })) + 'ms';
+      }
+
+      document.getElementById('pf-mem-best').textContent = getBest(scores.memory)    !== '—' ? getBest(scores.memory)    + ' / 100' : '—';
+      document.getElementById('pf-att-best').textContent = getBest(scores.attention)  !== '—' ? getBest(scores.attention)  + ' / 100' : '—';
+      document.getElementById('pf-rt-best').textContent  = getBestRT(scores.reaction);
+
+      // Show page
+      document.body.classList.add('ready');
+    });
+  });
+</script>
+</body>
+</html>

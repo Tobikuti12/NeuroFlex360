@@ -1,5 +1,5 @@
 # NeuroFlex360 — Firebase Backend Setup Guide
-# Middlesex University Dubai | CST3990
+# NeuroFlex360 | CST3990
 # ==========================================
 
 This guide walks you through connecting NeuroFlex360 to Firebase.

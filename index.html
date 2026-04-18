@@ -3,36 +3,109 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>NeuroFlex360 – Cognitive Rehabilitation</title>
+  <title>NeuroFlex360 – Dashboard</title>
   <link rel="stylesheet" href="css/style.css" />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono&display=swap" rel="stylesheet" />
+  <style>
+    /* Hide until Firebase confirms auth — no flash */
+    body { visibility: hidden; opacity: 0; transition: opacity 0.3s ease; }
+    body.ready { visibility: visible; opacity: 1; }
+
+    /* ---- RESPONSIVE ---- */
+    @media (min-width: 600px) {
+      .app-shell {
+        max-width: 480px;
+        margin: 0 auto;
+        min-height: 100vh;
+        box-shadow: 0 0 60px rgba(0,0,0,0.5);
+        position: relative;
+      }
+    }
+
+    /* ---- STREAK MODAL ANIMATION ---- */
+    .modal-backdrop {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.6);
+      z-index: 999;
+      display: flex; align-items: center; justify-content: center;
+      padding: 24px;
+      opacity: 0; visibility: hidden;
+      transition: opacity 0.25s ease, visibility 0.25s ease;
+    }
+    .modal-backdrop.open { opacity: 1; visibility: visible; }
+
+    .modal-box {
+      background: var(--surface);
+      border-radius: 20px;
+      padding: 28px 24px;
+      max-width: 360px; width: 100%;
+      box-shadow: 0 16px 48px rgba(0,0,0,0.4);
+      position: relative;
+      transform: translateY(20px) scale(0.97);
+      transition: transform 0.25s ease;
+    }
+    .modal-backdrop.open .modal-box { transform: translateY(0) scale(1); }
+
+    .modal-close {
+      position: absolute; top: 14px; right: 16px;
+      background: none; border: none;
+      font-size: 20px; color: var(--text2);
+      cursor: pointer; line-height: 1;
+      padding: 4px;
+    }
+
+    /* ---- MODULE CARD HOVER (desktop) ---- */
+    @media (hover: hover) {
+      .module-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 32px rgba(0,0,0,0.45);
+        border-color: rgba(78,204,163,0.35);
+      }
+    }
+    .module-card {
+      transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    }
+    .module-card:active { transform: scale(0.98); }
+
+    /* ---- PROGRESS BAR ANIMATION ---- */
+    .progress-fill { transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
+    .cpb-fill      { transition: width 0.7s cubic-bezier(0.4, 0, 0.2, 1); }
+
+    /* ---- SCORE FADE IN ---- */
+    @keyframes scoreAppear {
+      from { opacity: 0; transform: translateY(4px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .score-loaded { animation: scoreAppear 0.4s ease both; }
+  </style>
 </head>
 <body>
+<div class="app-shell">
 
-  <!-- TOP HEADER -->
+  <!-- HEADER -->
   <header class="app-header">
     <div class="header-left">
       <div class="logo-mark">NF</div>
       <div>
         <p class="header-sub">Welcome back,</p>
-        <h1 class="header-name" id="header-name"></h1>
+        <h1 class="header-name" id="header-name">—</h1>
       </div>
     </div>
     <div class="header-right">
-      <div class="streak-badge" id="streak-badge" onclick="openStreakModal()" style="cursor:pointer;">🔥 -- day streak</div>
+      <div class="streak-badge" id="streak-badge" onclick="openStreakModal()">🌱 Start your streak!</div>
     </div>
   </header>
 
-  <!-- DAILY PROGRESS BAR -->
+  <!-- TODAY'S PROGRESS -->
   <section class="daily-progress-section">
     <div class="dp-top">
       <span>Today's Progress</span>
-      <span class="dp-frac">1 / 3 modules</span>
+      <span class="dp-frac" id="dp-frac">0 / 3 modules</span>
     </div>
     <div class="progress-track">
-      <div class="progress-fill" style="width: 33%;"></div>
+      <div class="progress-fill" id="dp-fill" style="width:0%;"></div>
     </div>
-    <p class="dp-hint">Complete all 3 modules to finish today's session</p>
+    <p class="dp-hint" id="dp-hint">Complete all 3 modules to finish today's session</p>
   </section>
 
   <!-- MODULE CARDS -->
@@ -43,15 +116,15 @@
       <div class="card-icon">🧠</div>
       <div class="card-body">
         <h3>Memory</h3>
-        <p>Card matching & pattern recall</p>
+        <p>Card matching &amp; pattern recall</p>
         <div class="card-progress-bar">
-          <div class="cpb-fill" id="mem-bar" style="background: var(--blue);"></div>
+          <div class="cpb-fill" id="mem-bar" style="background:var(--blue); width:0%;"></div>
         </div>
       </div>
       <div class="card-score">
         <span class="score-val blue" id="mem-score-val">--</span>
         <span class="score-unit">/ 100</span>
-        <div id="mem-level-badge" style="font-size:10px; color:var(--muted); margin-top:3px;"></div>
+        <div id="mem-level-badge" style="font-size:10px; color:var(--text2); margin-top:3px;"></div>
       </div>
     </a>
 
@@ -59,15 +132,15 @@
       <div class="card-icon">🎯</div>
       <div class="card-body">
         <h3>Attention</h3>
-        <p>Number focus & visual scanning</p>
+        <p>Number focus &amp; visual scanning</p>
         <div class="card-progress-bar">
-          <div class="cpb-fill" id="att-bar" style="background: var(--amber);"></div>
+          <div class="cpb-fill" id="att-bar" style="background:var(--amber); width:0%;"></div>
         </div>
       </div>
       <div class="card-score">
         <span class="score-val amber" id="att-score-val">--</span>
         <span class="score-unit">/ 100</span>
-        <div id="att-level-badge" style="font-size:10px; color:var(--muted); margin-top:3px;"></div>
+        <div id="att-level-badge" style="font-size:10px; color:var(--text2); margin-top:3px;"></div>
       </div>
     </a>
 
@@ -75,211 +148,227 @@
       <div class="card-icon">⚡</div>
       <div class="card-body">
         <h3>Reaction Time</h3>
-        <p>Speed testing & response training</p>
+        <p>Speed testing &amp; response training</p>
         <div class="card-progress-bar">
-          <div class="cpb-fill" id="rt-bar" style="background: var(--green);"></div>
+          <div class="cpb-fill" id="rt-bar" style="background:var(--green); width:0%;"></div>
         </div>
       </div>
       <div class="card-score">
         <span class="score-val green" id="rt-score-val">--</span>
         <span class="score-unit">ms</span>
-        <div id="rt-level-badge" style="font-size:10px; color:var(--muted); margin-top:3px;"></div>
+        <div id="rt-level-badge" style="font-size:10px; color:var(--text2); margin-top:3px;"></div>
       </div>
     </a>
-
   </main>
 
   <!-- BOTTOM NAV -->
   <nav class="bottom-nav">
     <a href="index.html" class="nav-item active">
-      <span class="nav-icon">🏠</span>
-      <span>Home</span>
+      <span class="nav-icon">🏠</span><span>Home</span>
     </a>
     <a href="pages/progress.html" class="nav-item">
-      <span class="nav-icon">📊</span>
-      <span>Progress</span>
+      <span class="nav-icon">📊</span><span>Progress</span>
+    </a>
+    <a href="pages/profile.html" class="nav-item">
+      <span class="nav-icon">👤</span><span>Profile</span>
     </a>
     <a href="javascript:void(0)" onclick="logoutUser()" class="nav-item">
-      <span class="nav-icon">🚪</span>
-      <span>Log Out</span>
+      <span class="nav-icon">🚪</span><span>Log Out</span>
     </a>
   </nav>
 
-    <!-- Firebase SDKs -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-  <script src="js/firebase-config.js"></script>
-  <script src="js/auth.js"></script>
-  <script>
-    // Show cached name immediately for faster UI display
-    var cachedName = sessionStorage.getItem('nf360_user_name');
-    if (cachedName) {
-      document.getElementById('header-name').textContent = cachedName.split(' ')[0];
-    }
-
-    // Wait for Firebase auth state
-    fbAuth.onAuthStateChanged(function(firebaseUser) {
-      if (!firebaseUser || !firebaseUser.emailVerified) {
-        window.location.href = 'welcome.html';
-        return;
-      }
-
-      // Load user profile if not already loaded
-      var loadProfile = _currentUser
-        ? Promise.resolve(_currentUser)
-        : fbDB.collection('users').doc(firebaseUser.uid).get().then(function(doc) {
-            if (!doc.exists) { window.location.href = 'welcome.html'; return null; }
-            _currentUser    = doc.data();
-            _currentUser.id = doc.id;
-            return _currentUser;
-          });
-
-      loadProfile.then(function(user) {
-        if (!user) return;
-
-        document.getElementById('header-name').textContent = user.name.split(' ')[0];
-
-        // Load scores then update cards
-        loadUserData(firebaseUser.uid).then(function() {
-          updateDashboardCards();
-        });
-      });
-    });
-
-    function updateDashboardCards() {
-      var LABELS   = { 1: 'Easy', 2: 'Medium', 3: 'Hard' };
-
-      function getLatest(module) {
-        var entries = (_cachedScores[module] || []);
-        return entries.length ? entries[entries.length - 1] : null;
-      }
-
-      var memLatest = getLatest('memory');
-      var memLevel  = getDifficultyLevel('memory');
-      if (memLatest) {
-        document.getElementById('mem-score-val').textContent = memLatest.score;
-        document.getElementById('mem-bar').style.width       = memLatest.score + '%';
-      }
-      document.getElementById('mem-level-badge').textContent = 'Lv.' + memLevel + ' ' + LABELS[memLevel];
-
-      var attLatest = getLatest('attention');
-      var attLevel  = getDifficultyLevel('attention');
-      if (attLatest) {
-        document.getElementById('att-score-val').textContent = attLatest.score;
-        document.getElementById('att-bar').style.width       = attLatest.score + '%';
-      }
-      document.getElementById('att-level-badge').textContent = 'Lv.' + attLevel + ' ' + LABELS[attLevel];
-
-      var rtLatest = getLatest('reaction');
-      if (rtLatest) {
-        document.getElementById('rt-score-val').textContent = rtLatest.score + 'ms';
-      }
-      document.getElementById('rt-level-badge').textContent = 'Lv.' + getDifficultyLevel('reaction') + ' ' + LABELS[getDifficultyLevel('reaction')];
-
-      // Streak
-      var streakCount = getStreak();
-      var streakBadge = document.getElementById('streak-badge');
-      if (streakCount === 0) {
-        streakBadge.textContent = '🌱 Start your streak today!';
-        streakBadge.style.color = 'rgba(255,255,255,0.5)';
-      } else {
-        streakBadge.textContent = '🔥 ' + streakCount + '-day streak';
-      }
-    }
-
-
-
-    function openStreakModal() {
-      var modal    = document.getElementById('streak-modal');
-      var titleEl  = document.getElementById('modal-streak-title');
-      var bodyEl   = document.getElementById('modal-streak-body');
-      var count    = getStreak();
-
-      modal.style.display = 'flex';
-
-      if (count === 0) {
-        titleEl.textContent = 'No streak yet';
-        bodyEl.textContent  = 'You have not completed a session today. Complete any training module to start your streak!';
-      } else if (count === 1) {
-        titleEl.textContent = 'Day 1 — great start!';
-        bodyEl.textContent  = 'You trained today. Come back tomorrow to keep your streak going!';
-      } else {
-        titleEl.textContent = count + '-day streak — well done!';
-        bodyEl.textContent  = 'You have trained for ' + count + ' days in a row. Keep it up — consistency is the key to cognitive improvement!';
-      }
-    }
-
-    function closeStreakModal() {
-      document.getElementById('streak-modal').style.display = 'none';
-    }
-
-    // ---- LOAD MODULE SCORES (per user) ----
-    var LABELS = { 1: 'Easy', 2: 'Medium', 3: 'Hard' };
-
-    function getLatest(module) {
-      var data    = getUserScores();
-      var entries = data[module] || [];
-      return entries.length ? entries[entries.length - 1] : null;
-    }
-
-    function getCurrentLevel(module) {
-      var data    = getUserScores();
-      var entries = data[module] || [];
-      if (entries.length < 3) return 1;
-      var recent = entries.slice(-3).map(function(e) { return e.score; });
-      var last   = entries[entries.length - 1].level || 1;
-      if (recent.every(function(s) { return s >= 75; }) && last < 3) return last + 1;
-      if (recent.every(function(s) { return s <  50; }) && last > 1) return last - 1;
-      return last;
-    }
-
-    // Memory
-    var memLatest = getLatest('memory');
-    var memLevel  = getCurrentLevel('memory');
-    if (memLatest) {
-      document.getElementById('mem-score-val').textContent = memLatest.score;
-      document.getElementById('mem-bar').style.width       = memLatest.score + '%';
-    }
-    document.getElementById('mem-level-badge').textContent = 'Lv.' + memLevel + ' ' + LABELS[memLevel];
-
-    // Attention
-    var attLatest = getLatest('attention');
-    var attLevel  = getCurrentLevel('attention');
-    if (attLatest) {
-      document.getElementById('att-score-val').textContent = attLatest.score;
-      document.getElementById('att-bar').style.width       = attLatest.score + '%';
-    }
-    document.getElementById('att-level-badge').textContent = 'Lv.' + attLevel + ' ' + LABELS[attLevel];
-
-    // Reaction
-    var rtLatest = getLatest('reaction');
-    var rtLevel  = getCurrentLevel('reaction');
-    if (rtLatest) {
-      document.getElementById('rt-score-val').textContent = rtLatest.score + 'ms';
-    }
-    document.getElementById('rt-level-badge').textContent = 'Lv.' + rtLevel + ' ' + LABELS[rtLevel];
-  </script>
-
-
   <!-- STREAK MODAL -->
-  <div id="streak-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:999; align-items:center; justify-content:center; padding:24px;">
-    <div style="background:var(--surface); border-radius:var(--radius); padding:28px 24px; max-width:360px; width:100%; box-shadow:0 8px 32px rgba(0,0,0,0.2); position:relative;">
-      <button onclick="closeStreakModal()" style="position:absolute; top:14px; right:16px; background:none; border:none; font-size:20px; color:var(--muted); cursor:pointer;">✕</button>
+  <div class="modal-backdrop" id="streak-modal" onclick="closeStreakModal(event)">
+    <div class="modal-box">
+      <button class="modal-close" onclick="closeStreakModal()">✕</button>
       <div style="font-size:48px; text-align:center; margin-bottom:12px;">🔥</div>
       <h2 style="font-size:18px; font-weight:600; text-align:center; margin-bottom:8px;" id="modal-streak-title">Your Streak</h2>
-      <p style="font-size:13px; color:var(--muted); text-align:center; line-height:1.7; margin-bottom:20px;" id="modal-streak-body"></p>
+      <p style="font-size:13px; color:var(--text2); text-align:center; line-height:1.7; margin-bottom:20px;" id="modal-streak-body"></p>
       <div style="background:var(--bg); border-radius:10px; padding:16px; border:1px solid var(--border);">
-        <p style="font-size:12px; color:var(--muted); line-height:1.7; margin:0;">
+        <p style="font-size:12px; color:var(--text2); line-height:1.7; margin:0;">
           <strong style="color:var(--text);">What is a streak?</strong><br>
-          A streak counts how many days in a row you have completed at least one training module. 
-          Coming back every day — even for just one session — keeps your streak alive and helps your brain build lasting habits.
-          If you miss a day, your streak resets to zero, so try to train a little each day!
+          A streak counts how many days in a row you have completed at least one training module.
+          Coming back every day — even for just one session — keeps your streak alive.
+          If you miss a day, your streak resets to zero.
         </p>
       </div>
       <button onclick="closeStreakModal()" class="btn-primary" style="margin-top:16px; width:100%; padding:13px;">Got it 👍</button>
     </div>
   </div>
 
+</div><!-- end app-shell -->
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="js/firebase-config.js"></script>
+<script src="js/auth.js"></script>
+<script>
+  var LABELS = { 1:'Easy', 2:'Medium', 3:'Hard' };
+  var TODAY  = new Date().toDateString();
+
+  // ---- AUTH GUARD ----
+  fbAuth.onAuthStateChanged(function(firebaseUser) {
+    if (!firebaseUser || !firebaseUser.emailVerified) {
+      window.location.href = 'welcome.html';
+      return;
+    }
+
+    var loadProfile = _currentUser
+      ? Promise.resolve(_currentUser)
+      : fbDB.collection('users').doc(firebaseUser.uid).get().then(function(doc) {
+          if (!doc.exists) { window.location.href = 'welcome.html'; return null; }
+          _currentUser    = doc.data();
+          _currentUser.id = doc.id;
+          return _currentUser;
+        });
+
+    loadProfile.then(function(user) {
+      if (!user) return;
+
+      if (!hasCompletedOnboarding()) {
+        window.location.href = 'onboarding.html';
+        return;
+      }
+
+      document.getElementById('header-name').textContent = user.name.split(' ')[0];
+
+      // Paint immediately from sessionStorage cache (instant on refresh)
+      // This eliminates the blank-score flash
+      updateDashboard();
+      document.body.classList.add('ready');
+
+      // Then fetch fresh data from Firestore and repaint
+      loadUserData(firebaseUser.uid).then(function() {
+        updateDashboard();
+      });
+    });
+  });
+
+  // ---- UPDATE ALL DASHBOARD ELEMENTS ----
+  function updateDashboard() {
+    updateModuleCards();
+    updateProgressBar();
+    updateStreakBadge();
+  }
+
+  function updateModuleCards() {
+    var scores = _cachedScores;
+
+    // Memory
+    var memEntries = scores.memory || [];
+    var memLatest  = memEntries.length ? memEntries[memEntries.length - 1] : null;
+    var memLevel   = getDifficultyLevel('memory');
+    if (memLatest) {
+      var el = document.getElementById('mem-score-val');
+      el.textContent = memLatest.score;
+      el.classList.add('score-loaded');
+      document.getElementById('mem-bar').style.width = memLatest.score + '%';
+    }
+    document.getElementById('mem-level-badge').textContent = 'Lv.' + memLevel + ' ' + LABELS[memLevel];
+
+    // Attention
+    var attEntries = scores.attention || [];
+    var attLatest  = attEntries.length ? attEntries[attEntries.length - 1] : null;
+    var attLevel   = getDifficultyLevel('attention');
+    if (attLatest) {
+      var el2 = document.getElementById('att-score-val');
+      el2.textContent = attLatest.score;
+      el2.classList.add('score-loaded');
+      document.getElementById('att-bar').style.width = attLatest.score + '%';
+    }
+    document.getElementById('att-level-badge').textContent = 'Lv.' + attLevel + ' ' + LABELS[attLevel];
+
+    // Reaction
+    var rtEntries = scores.reaction || [];
+    var rtLatest  = rtEntries.length ? rtEntries[rtEntries.length - 1] : null;
+    var rtLevel   = getDifficultyLevel('reaction');
+    if (rtLatest) {
+      var el3 = document.getElementById('rt-score-val');
+      el3.textContent = rtLatest.score + 'ms';
+      el3.classList.add('score-loaded');
+      document.getElementById('rt-bar').style.width = Math.max(0, Math.min(100, Math.round((800 - rtLatest.score) / 6))) + '%';
+    }
+    document.getElementById('rt-level-badge').textContent = 'Lv.' + rtLevel + ' ' + LABELS[rtLevel];
+  }
+
+  // ---- TODAY'S PROGRESS ----
+  // Counts how many distinct modules have at least one entry TODAY
+  function updateProgressBar() {
+    var scores    = _cachedScores;
+    var completed = 0;
+
+    ['memory', 'attention', 'reaction'].forEach(function(mod) {
+      var entries = scores[mod] || [];
+      // Check if any entry for this module was saved today
+      var doneToday = entries.some(function(e) {
+        // Use localDate if present (new entries), fall back to parsing date string
+        var entryDay = e.localDate || new Date(e.date).toDateString();
+        return entryDay === TODAY;
+      });
+      if (doneToday) completed++;
+    });
+
+    var pct     = Math.round((completed / 3) * 100);
+    var fracEl  = document.getElementById('dp-frac');
+    var fillEl  = document.getElementById('dp-fill');
+    var hintEl  = document.getElementById('dp-hint');
+
+    fracEl.textContent = completed + ' / 3 modules';
+    // Small delay so the CSS transition animates from 0
+    setTimeout(function() { fillEl.style.width = pct + '%'; }, 100);
+
+    if (completed === 3) {
+      hintEl.textContent = '🎉 All done for today — great work!';
+      hintEl.style.color  = 'var(--accent)';
+    } else if (completed === 0) {
+      hintEl.textContent = 'Complete all 3 modules to finish today\'s session';
+      hintEl.style.color  = '';
+    } else {
+      hintEl.textContent = (3 - completed) + ' module' + (3 - completed > 1 ? 's' : '') + ' left for today';
+      hintEl.style.color  = '';
+    }
+  }
+
+  // ---- STREAK BADGE ----
+  function updateStreakBadge() {
+    var count  = getStreak();
+    var badge  = document.getElementById('streak-badge');
+    if (count === 0) {
+      badge.textContent   = '🌱 Start your streak!';
+      badge.style.color   = 'rgba(255,255,255,0.5)';
+    } else {
+      badge.textContent   = '🔥 ' + count + '-day streak';
+      badge.style.color   = '';
+    }
+  }
+
+  // ---- STREAK MODAL ----
+  function openStreakModal() {
+    var count   = getStreak();
+    var titleEl = document.getElementById('modal-streak-title');
+    var bodyEl  = document.getElementById('modal-streak-body');
+
+    if (count === 0) {
+      titleEl.textContent = 'No streak yet';
+      bodyEl.textContent  = 'Complete any training module today to start your streak!';
+    } else if (count === 1) {
+      titleEl.textContent = 'Day 1 — great start!';
+      bodyEl.textContent  = 'You trained today. Come back tomorrow to keep it going!';
+    } else {
+      titleEl.textContent = count + '-day streak — well done!';
+      bodyEl.textContent  = 'You have trained for ' + count + ' days in a row. Keep it up!';
+    }
+
+    document.getElementById('streak-modal').classList.add('open');
+  }
+
+  function closeStreakModal(e) {
+    // Close if clicking the backdrop, the close button, or the got it button
+    if (e && e.target !== document.getElementById('streak-modal') && !e.target.classList.contains('modal-close')) return;
+    document.getElementById('streak-modal').classList.remove('open');
+  }
+</script>
 </body>
 </html>

@@ -1,235 +1,207 @@
 // =========================================
-//  progress.js – Progress Page Logic
-//  NeuroFlex360 | Middlesex University Dubai
+//  progress.js – Progress Page
+//  NeuroFlex360
 //
-//  This page reads scores saved by each game module
-//  from localStorage and displays them as stats,
-//  bar charts, and a clinician report.
+//  FIX: Reads from _cachedScores (populated
+//  by loadUserData() after Firestore fetch)
+//  not from getUserScores() which returns {}
+//  before Firebase has finished loading.
 // =========================================
 
-// ---------- LOAD DATA FROM LOCALSTORAGE ----------
-function loadScores() {
-  // Use auth.js to get scores for the currently logged-in user only
-  return getUserScores();
-}
-
-// ---------- GET AVERAGE ----------
 function getAverage(arr) {
   if (!arr || arr.length === 0) return null;
-  const total = arr.reduce(function(sum, entry) { return sum + entry.score; }, 0);
-  return Math.round(total / arr.length);
+  return Math.round(arr.reduce(function(s, e) { return s + e.score; }, 0) / arr.length);
 }
 
-// ---------- GET LATEST SCORE ----------
-function getLatest(arr) {
+function getLatestScore(arr) {
   if (!arr || arr.length === 0) return null;
   return arr[arr.length - 1].score;
 }
 
-// ---------- GET IMPROVEMENT ----------
-// Compares latest score to previous score
 function getImprovement(arr) {
   if (!arr || arr.length < 2) return null;
-  const latest   = arr[arr.length - 1].score;
-  const previous = arr[arr.length - 2].score;
-  return latest - previous;
+  return arr[arr.length - 1].score - arr[arr.length - 2].score;
 }
 
-// ---------- RENDER MODULE ROW ----------
 function renderModule(moduleId, data, scoreElId, sessionsElId, changeElId, barElId) {
-  const entries = data[moduleId] || [];
+  var entries     = data[moduleId] || [];
+  var latest      = getLatestScore(entries);
+  var improvement = getImprovement(entries);
 
-  const latest      = getLatest(entries);
-  const improvement = getImprovement(entries);
+  document.getElementById(sessionsElId).textContent =
+    entries.length + ' session' + (entries.length !== 1 ? 's' : '');
 
-  // Sessions count
-  document.getElementById(sessionsElId).textContent = entries.length + ' session' + (entries.length !== 1 ? 's' : '');
-
-  // Score display
   if (latest !== null) {
-    const scoreEl = document.getElementById(scoreElId);
-
-    // Reaction time shows ms, others show /100
-    if (moduleId === 'reaction') {
-      scoreEl.textContent = latest + 'ms';
-    } else {
-      scoreEl.textContent = latest;
-    }
+    document.getElementById(scoreElId).textContent =
+      moduleId === 'reaction' ? latest + 'ms' : latest;
   } else {
     document.getElementById(scoreElId).textContent = '--';
+    document.getElementById(scoreElId).nextElementSibling &&
+      (document.getElementById(scoreElId).parentElement.querySelector('.mr-change').textContent = 'No data yet');
   }
 
-  // Improvement text
-  const changeEl = document.getElementById(changeElId);
+  var changeEl = document.getElementById(changeElId);
   if (improvement !== null) {
     if (moduleId === 'reaction') {
-      // Lower is better for reaction time
-      const better = improvement < 0;
-      changeEl.textContent = better
+      var faster = improvement < 0;
+      changeEl.textContent = faster
         ? '↓ ' + Math.abs(improvement) + 'ms faster'
         : '↑ ' + improvement + 'ms slower';
-      changeEl.style.color = better ? '#3b6d11' : '#a32d2d';
+      changeEl.style.color = faster ? '#4ecca3' : '#ef4444';
     } else {
       changeEl.textContent = improvement >= 0
-        ? '↑ +' + improvement + ' from last session'
-        : '↓ ' + improvement + ' from last session';
-      changeEl.style.color = improvement >= 0 ? '#3b6d11' : '#a32d2d';
+        ? '↑ +' + improvement + ' from last'
+        : '↓ ' + improvement + ' from last';
+      changeEl.style.color = improvement >= 0 ? '#4ecca3' : '#ef4444';
     }
   } else {
     changeEl.textContent = entries.length === 0 ? 'No data yet' : 'First session!';
+    changeEl.style.color = 'var(--text2)';
   }
 
-  // Progress bar width (memory and attention out of 100, reaction capped at 800ms)
-  const barEl = document.getElementById(barElId);
+  var barEl = document.getElementById(barElId);
   if (latest !== null) {
-    let pct;
-    if (moduleId === 'reaction') {
-      // Faster = higher bar: 200ms = 100%, 800ms = 0%
-      pct = Math.max(0, Math.min(100, Math.round((800 - latest) / 6)));
-    } else {
-      pct = Math.min(100, latest);
-    }
-    barEl.style.width = pct + '%';
+    var pct = moduleId === 'reaction'
+      ? Math.max(0, Math.min(100, Math.round((800 - latest) / 6)))
+      : Math.min(100, latest);
+    // Animate bar with a tiny delay
+    setTimeout(function() { barEl.style.width = pct + '%'; }, 150);
   }
 }
 
-// ---------- RENDER SUMMARY STATS ----------
 function renderSummary(data) {
-  // Total sessions = sum of all entries across all modules
-  const totalSessions =
+  var total =
     (data.memory    ? data.memory.length    : 0) +
     (data.attention ? data.attention.length : 0) +
     (data.reaction  ? data.reaction.length  : 0);
 
-  document.getElementById('sum-sessions').textContent = totalSessions;
+  document.getElementById('sum-sessions').textContent = total;
 
-  // Calculate overall average score (memory + attention only, not reaction ms)
-  const memAvg = getAverage(data.memory);
-  const attAvg = getAverage(data.attention);
-  const both   = [memAvg, attAvg].filter(function(v) { return v !== null; });
+  var memAvg = getAverage(data.memory);
+  var attAvg = getAverage(data.attention);
+  var both   = [memAvg, attAvg].filter(function(v) { return v !== null; });
   if (both.length > 0) {
-    const overall = Math.round(both.reduce(function(a, b) { return a + b; }, 0) / both.length);
+    var overall = Math.round(both.reduce(function(a, b) { return a + b; }, 0) / both.length);
     document.getElementById('sum-avg').textContent = overall;
+  } else {
+    document.getElementById('sum-avg').textContent = '--';
   }
+
+  var streak = getStreak();
+  document.getElementById('sum-streak').textContent = streak > 0 ? streak : '0';
 }
 
-// ---------- RENDER BAR CHART (Memory scores over time) ----------
 function renderChart(data) {
-  const entries  = data.memory || [];
-  const chartEl  = document.getElementById('mem-chart');
-  const labelsEl = document.getElementById('chart-x-labels');
-  const noData   = document.getElementById('no-data-msg');
+  var entries  = data.memory || [];
+  var chartEl  = document.getElementById('mem-chart');
+  var labelsEl = document.getElementById('chart-x-labels');
+  var noData   = document.getElementById('no-data-msg');
 
   if (entries.length === 0) {
-    noData.style.display = 'block';
+    if (noData) noData.style.display = 'block';
     return;
   }
+  if (noData) noData.style.display = 'none';
 
-  noData.style.display = 'none';
-
-  // Use the last 7 entries at most
-  const recent = entries.slice(-7);
-  const maxScore = Math.max(...recent.map(function(e) { return e.score; }));
+  var recent = entries.slice(-7);
+  chartEl.querySelectorAll('.chart-bar').forEach(function(b) { b.remove(); });
+  labelsEl.innerHTML = '';
 
   recent.forEach(function(entry, i) {
-    // Bar
-    const bar = document.createElement('div');
+    var bar = document.createElement('div');
     bar.classList.add('chart-bar');
-    const height = Math.max(6, Math.round((entry.score / 100) * 90));
-    bar.style.height = height + 'px';
+    bar.style.height = '0px'; // start at 0 for animation
     chartEl.appendChild(bar);
 
-    // X-axis label (just "S1", "S2", etc.)
-    const lbl = document.createElement('div');
+    var lbl = document.createElement('div');
     lbl.classList.add('chart-x-lbl');
     lbl.textContent = 'S' + (i + 1);
     labelsEl.appendChild(lbl);
+
+    // Animate bar up
+    var targetH = Math.max(6, Math.round((entry.score / 100) * 90));
+    setTimeout(function() { bar.style.height = targetH + 'px'; }, 100 + i * 60);
   });
 }
 
-// ---------- GENERATE CLINICIAN NOTE ----------
 function renderTherapistNote(data) {
-  const noteEl  = document.getElementById('clinician-note');
-  const memData = data.memory    || [];
-  const attData = data.attention || [];
-  const rtData  = data.reaction  || [];
+  var noteEl  = document.getElementById('clinician-note');
+  var memData = data.memory    || [];
+  var attData = data.attention || [];
+  var rtData  = data.reaction  || [];
 
-  // Only generate if there's some data
-  if (memData.length === 0 && attData.length === 0 && rtData.length === 0) {
-    return; // leave the default placeholder text
-  }
+  if (memData.length === 0 && attData.length === 0 && rtData.length === 0) return;
 
-  let notes = [];
+  var notes = [];
 
-  // Memory note
   if (memData.length > 0) {
-    const memAvg  = getAverage(memData);
-    const memLatest = getLatest(memData);
-    const memTrend = getImprovement(memData);
-
-    if (memLatest >= 75) {
-      notes.push('Memory performance is strong at ' + memLatest + '/100.');
-    } else if (memLatest >= 50) {
-      notes.push('Memory performance is moderate (' + memLatest + '/100). Continued daily practice is recommended.');
-    } else {
-      notes.push('Memory performance requires attention (' + memLatest + '/100). Consider increasing session frequency.');
-    }
-
-    if (memTrend !== null && memTrend > 0) {
-      notes.push('Improvement of +' + memTrend + ' points observed from last session — positive trend.');
-    }
+    var ml = getLatestScore(memData);
+    notes.push(ml >= 75
+      ? 'Memory performance is strong at ' + ml + '/100.'
+      : ml >= 50
+        ? 'Memory performance is moderate (' + ml + '/100). Continued daily practice is recommended.'
+        : 'Memory performance requires attention (' + ml + '/100). Consider increasing session frequency.');
+    var mt = getImprovement(memData);
+    if (mt !== null && mt > 0)
+      notes.push('Improvement of +' + mt + ' points observed from last session — positive trend.');
   }
 
-  // Attention note
   if (attData.length > 0) {
-    const attLatest = getLatest(attData);
-
-    if (attLatest >= 70) {
-      notes.push('Attention scores indicate good focus and cognitive selectivity.');
-    } else {
-      notes.push('Attention training scores (' + attLatest + '/100) suggest difficulty with sustained focus — recommend daily exercises.');
-    }
+    var al = getLatestScore(attData);
+    notes.push(al >= 70
+      ? 'Attention scores indicate good focus and cognitive selectivity.'
+      : 'Attention scores (' + al + '/100) suggest difficulty with sustained focus — daily exercises recommended.');
   }
 
-  // Reaction time note
   if (rtData.length > 0) {
-    const rtLatest = getLatest(rtData);
-
-    if (rtLatest < 300) {
-      notes.push('Reaction time of ' + rtLatest + 'ms is excellent — well above average for this age group.');
-    } else if (rtLatest < 500) {
-      notes.push('Reaction time of ' + rtLatest + 'ms is within a normal range. Continued reaction training advised.');
-    } else {
-      notes.push('Reaction time of ' + rtLatest + 'ms is below target. Neuromotor exercises recommended.');
-    }
+    var rl = getLatestScore(rtData);
+    notes.push(rl < 300
+      ? 'Reaction time of ' + rl + 'ms is excellent.'
+      : rl < 500
+        ? 'Reaction time of ' + rl + 'ms is within normal range.'
+        : 'Reaction time of ' + rl + 'ms is below target. Neuromotor exercises recommended.');
   }
 
-  // Final general note
   notes.push('Therapist note generated on ' + new Date().toLocaleDateString('en-GB') + '.');
-
   noteEl.textContent = notes.join(' ');
 }
 
-// ---------- INIT ----------
-function init() {
-  const data = loadScores();
+// ---- INIT — waits for Firebase data to be loaded ----
+function initProgress() {
+  fbAuth.onAuthStateChanged(function(firebaseUser) {
+    if (!firebaseUser || !firebaseUser.emailVerified) {
+      window.location.href = '../welcome.html';
+      return;
+    }
 
-  renderSummary(data);
+    // Load profile to check role, then load scores
+    fbDB.collection('users').doc(firebaseUser.uid).get().then(function(doc) {
+      if (!doc.exists) { window.location.href = '../welcome.html'; return; }
 
-  renderModule('memory',    data, 'mem-score', 'mem-sessions', 'mem-change', 'mem-bar');
-  renderModule('attention', data, 'att-score', 'att-sessions', 'att-change', 'att-bar');
-  renderModule('reaction',  data, 'rt-score',  'rt-sessions',  'rt-change',  'rt-bar');
+      var profile = doc.data();
+      // Therapists go to their own dashboard
+      if (profile.role === 'clinician' || profile.role === 'therapist') {
+        window.location.href = 'clinician.html';
+        return;
+      }
 
-  renderChart(data);
-  renderTherapistNote(data);
+      _currentUser    = profile;
+      _currentUser.id = doc.id;
+
+      return loadUserData(firebaseUser.uid).then(function() {
+        var data = _cachedScores;
+
+        renderSummary(data);
+        renderModule('memory',    data, 'mem-score', 'mem-sessions', 'mem-change', 'mem-bar');
+        renderModule('attention', data, 'att-score', 'att-sessions', 'att-change', 'att-bar');
+        renderModule('reaction',  data, 'rt-score',  'rt-sessions',  'rt-change',  'rt-bar');
+        renderChart(data);
+        renderTherapistNote(data);
+
+        document.body.classList.add('ready');
+      });
+    });
+  });
 }
 
-window.addEventListener('DOMContentLoaded', function() {
-  // Show real streak on progress page
-  var streakEl = document.getElementById('sum-streak');
-  if (streakEl) {
-    var count = getStreak();
-    streakEl.textContent = count > 0 ? count : '0';
-  }
-  init();
-});
+window.addEventListener('DOMContentLoaded', initProgress);

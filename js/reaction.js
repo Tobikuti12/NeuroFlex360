@@ -1,6 +1,6 @@
 // =========================================
 //  reaction.js – Reaction Time Module (Adaptive)
-//  NeuroFlex360 | Middlesex University Dubai
+//  NeuroFlex360 | NeuroFlex360
 //
 //  L1 Easy   – 5 rounds, delay 2000–4000ms
 //  L2 Medium – 6 rounds, delay 1500–3500ms

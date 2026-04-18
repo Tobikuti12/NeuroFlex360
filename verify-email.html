@@ -51,71 +51,97 @@
   <script src="js/firebase-config.js"></script>
   <script src="js/auth.js"></script>
   <script>
-    var params = new URLSearchParams(window.location.search);
-    var email  = params.get('email') || '';
-    var name   = params.get('name')  || 'there';
+    var params   = new URLSearchParams(window.location.search);
+    var urlEmail = params.get('email') || '';
+    var urlName  = params.get('name')  || 'there';
 
-    if (name)  document.getElementById('page-title').textContent  = 'Almost there, ' + name + '!';
-    if (email) document.getElementById('email-hint').textContent  =
-      'We sent a verification link to ' + email + '. Click the link in that email, then tap the button below.';
+    if (urlName)  document.getElementById('page-title').textContent = 'Almost there, ' + urlName + '!';
+    if (urlEmail) document.getElementById('email-hint').textContent =
+      'We sent a verification link to ' + urlEmail + '. Click the link in that email, then tap the button below.';
+
+    // Keep a reference to the Firebase user once auth is ready.
+    // fbAuth.currentUser is null on page load — we must wait for this.
+    var _fbUser = null;
+
+    fbAuth.onAuthStateChanged(function(user) {
+      _fbUser = user;
+      // If user is already verified (e.g. they clicked the link in another tab),
+      // redirect them automatically without needing to press the button.
+      if (user && user.emailVerified) {
+        window.location.href = 'onboarding.html';
+      }
+    });
 
     function checkVerified() {
       var btn    = document.getElementById('verified-btn');
       var status = document.getElementById('status-msg');
+
       btn.textContent = 'Checking…';
       btn.disabled    = true;
+      status.style.display = 'none';
 
-      var user = fbAuth.currentUser;
-
-      if (!user) {
-        // Try signing in silently to reload state
-        status.style.display = 'block';
-        status.style.color   = 'rgba(255,255,255,0.5)';
-        status.textContent   = 'Please click the link in your email first, then tap this button.';
-        btn.textContent = 'I have verified my email →';
-        btn.disabled    = false;
+      // If Firebase hasn't resolved auth state yet, wait briefly and retry
+      if (!_fbUser) {
+        setTimeout(function() {
+          btn.textContent = 'I have verified my email →';
+          btn.disabled    = false;
+          status.style.display  = 'block';
+          status.style.color    = 'rgba(255,255,255,0.55)';
+          status.textContent    = 'Please click the link in your email first, then tap this button again.';
+        }, 1500);
         return;
       }
 
-      // Reload the user to get fresh emailVerified status
-      user.reload().then(function() {
-        if (user.emailVerified) {
-          btn.textContent = '✅ Verified!';
-          window.location.href = 'index.html';
-        } else {
-          btn.textContent = 'I have verified my email →';
-          btn.disabled    = false;
+      // Force-reload the user token to get the latest emailVerified value from Firebase
+      _fbUser.reload()
+        .then(function() {
+          // After reload, get the refreshed user object
+          var freshUser = fbAuth.currentUser;
+          if (freshUser && freshUser.emailVerified) {
+            btn.textContent = '✅ Verified!';
+            // Small pause so user sees the tick before navigating
+            setTimeout(function() {
+              window.location.href = 'onboarding.html';
+            }, 600);
+          } else {
+            btn.textContent      = 'I have verified my email →';
+            btn.disabled         = false;
+            status.style.display = 'block';
+            status.style.color   = '#fca5a5';
+            status.textContent   = 'Not verified yet. Please click the link in your inbox, then try again.';
+          }
+        })
+        .catch(function(err) {
+          btn.textContent      = 'I have verified my email →';
+          btn.disabled         = false;
           status.style.display = 'block';
           status.style.color   = '#fca5a5';
-          status.textContent   = 'Email not verified yet. Please click the link in your inbox first.';
-        }
-      }).catch(function(err) {
-        btn.textContent = 'I have verified my email →';
-        btn.disabled    = false;
-        status.style.display = 'block';
-        status.style.color   = '#fca5a5';
-        status.textContent   = 'Error checking verification status. Please try again.';
-      });
+          status.textContent   = 'Something went wrong. Please try again.';
+          console.error(err);
+        });
     }
 
     function resendEmail() {
-      var user   = fbAuth.currentUser;
       var status = document.getElementById('status-msg');
       status.style.display = 'block';
 
-      if (!user) {
+      if (!_fbUser) {
         status.style.color   = 'rgba(255,255,255,0.5)';
-        status.textContent   = 'Please sign up first.';
+        status.textContent   = 'Session expired. Please go back and sign up again.';
         return;
       }
 
-      user.sendEmailVerification().then(function() {
-        status.style.color   = '#4ecca3';
-        status.textContent   = '✅ Verification email resent. Check your inbox.';
-      }).catch(function(err) {
-        status.style.color   = '#fca5a5';
-        status.textContent   = err.message;
-      });
+      _fbUser.sendEmailVerification()
+        .then(function() {
+          status.style.color   = '#4ecca3';
+          status.textContent   = '✅ Verification email resent. Check your inbox.';
+        })
+        .catch(function(err) {
+          status.style.color   = '#fca5a5';
+          status.textContent   = err.code === 'auth/too-many-requests'
+            ? 'Too many attempts. Please wait a few minutes before resending.'
+            : err.message;
+        });
     }
   </script>
 </body>

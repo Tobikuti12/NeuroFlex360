@@ -1,6 +1,6 @@
 // =========================================
 //  congrats.js – Colourful celebration overlay
-//  NeuroFlex360 | Middlesex University Dubai
+//  NeuroFlex360 | NeuroFlex360
 //
 //  Call: showCongrats(score, moduleName, onDone)
 //  Shows for ~3 seconds then calls onDone()

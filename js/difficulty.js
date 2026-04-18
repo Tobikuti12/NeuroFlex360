@@ -1,6 +1,6 @@
 // =========================================
 //  difficulty.js – Adaptive Difficulty Engine
-//  NeuroFlex360 | Middlesex University Dubai
+//  NeuroFlex360 | NeuroFlex360
 //
 //  Reads the last 3 session scores for a module
 //  and automatically determines the next level.

@@ -1,6 +1,6 @@
 // =========================================
 //  attention.js – Attention Module (Adaptive)
-//  NeuroFlex360 | Middlesex University Dubai
+//  NeuroFlex360 | NeuroFlex360
 //
 //  Three task types:
 //  1. Number Focus     – pick correct number (all levels)

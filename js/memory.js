@@ -1,6 +1,6 @@
 // =========================================
 //  memory.js – Memory Module (Adaptive)
-//  NeuroFlex360 | Middlesex University Dubai
+//  NeuroFlex360 | NeuroFlex360
 //
 //  Three task types rotate based on level:
 //  1. Card Matching   – flip emoji pairs (all levels)

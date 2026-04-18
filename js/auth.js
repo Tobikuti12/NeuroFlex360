@@ -1,6 +1,6 @@
 // =========================================
 //  auth.js – Firebase Backend
-//  NeuroFlex360 | Middlesex University Dubai
+//  NeuroFlex360 | NeuroFlex360
 // =========================================
 
 var _currentUser  = null;
@@ -121,9 +121,6 @@ function loginUser(email, password) {
             _currentUser.verified = true;
           }
 
-          // Cache user name for faster UI display on next page load
-          sessionStorage.setItem('nf360_user_name', _currentUser.name);
-
           return loadUserData(user.uid).then(function() { return true; });
         });
     })
@@ -145,7 +142,7 @@ function logoutUser() {
   _currentUser  = null;
   _cachedScores = {};
   _cachedStreak = { count: 0, lastDate: null };
-  sessionStorage.removeItem('nf360_user_name');
+  sessionStorage.clear();
   fbAuth.signOut().then(function() {
     window.location.href = 'login.html';
   });
@@ -166,11 +163,19 @@ function sendPasswordReset(email) {
 function getUserScores() { return _cachedScores; }
 
 function _loadScores(uid) {
+  // Try sessionStorage first for instant display on refresh
+  var cached = sessionStorage.getItem('nf360_scores_' + uid);
+  if (cached) {
+    try { _cachedScores = JSON.parse(cached); } catch(e) {}
+  }
+
   return fbDB.collection('users').doc(uid).collection('scores').get()
     .then(function(snap) {
       var scores = {};
       snap.forEach(function(doc) { scores[doc.id] = doc.data().sessions || []; });
       _cachedScores = scores;
+      // Cache in sessionStorage for next page load
+      try { sessionStorage.setItem('nf360_scores_' + uid, JSON.stringify(scores)); } catch(e) {}
       return scores;
     });
 }
@@ -179,7 +184,13 @@ function saveScoreWithLevel(module, score, level) {
   var user = fbAuth.currentUser;
   if (!user) return;
 
-  var entry = { score: score, level: level, date: new Date().toISOString() };
+  var d = new Date();
+  var entry = {
+    score:     score,
+    level:     level,
+    date:      d.toISOString(),
+    localDate: d.toDateString()   // e.g. "Sat Apr 19 2026" — timezone-safe
+  };
 
   if (!_cachedScores[module]) _cachedScores[module] = [];
   _cachedScores[module].push(entry);
@@ -210,9 +221,16 @@ function getNextDifficultyLevel(module) { return getDifficultyLevel(module); }
 
 // ---- STREAK ----
 function _loadStreak(uid) {
+  // Try sessionStorage first
+  var cached = sessionStorage.getItem('nf360_streak_' + uid);
+  if (cached) {
+    try { _cachedStreak = JSON.parse(cached); } catch(e) {}
+  }
+
   return fbDB.collection('users').doc(uid).collection('streak').doc('current').get()
     .then(function(doc) {
       if (doc.exists) _cachedStreak = doc.data();
+      try { sessionStorage.setItem('nf360_streak_' + uid, JSON.stringify(_cachedStreak)); } catch(e) {}
       return _cachedStreak;
     });
 }
@@ -256,6 +274,16 @@ function loadUserData(uid) {
 function getRemembered()          { return JSON.parse(localStorage.getItem('nf360_remember') || 'null'); }
 function setRemembered(name, em)  { localStorage.setItem('nf360_remember', JSON.stringify({ name: name, email: em })); }
 function clearRemembered()        { localStorage.removeItem('nf360_remember'); }
+
+// ---- ONBOARDING FLAG (localStorage only) ----
+function hasCompletedOnboarding() {
+  var u = fbAuth.currentUser;
+  return u ? localStorage.getItem('nf360_onboarded_' + u.uid) === 'true' : false;
+}
+function markOnboardingComplete() {
+  var u = fbAuth.currentUser;
+  if (u) localStorage.setItem('nf360_onboarded_' + u.uid, 'true');
+}
 
 // ---- THERAPIST: GET PATIENTS ----
 function getAllPatients() {

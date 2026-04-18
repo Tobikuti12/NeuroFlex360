@@ -5,309 +5,474 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Welcome – NeuroFlex360</title>
   <link rel="stylesheet" href="css/style.css" />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono&display=swap" rel="stylesheet" />
   <style>
-    /* Dark navy auth theme matching landing page */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
     body {
-      background: linear-gradient(135deg, #0f1729 0%, #16213e 50%, #0f3460 100%);
+      font-family: 'DM Sans', sans-serif;
+      line-height: 1.5;
+      background: linear-gradient(160deg, #0f1729 0%, #16213e 60%, #0f3460 100%);
       min-height: 100vh;
-      padding-bottom: 48px;
-      max-width: 600px;
+      max-width: 480px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      color: white;
+      padding-bottom: 0;
     }
-    .auth-header {
-      background: transparent;
-      padding: 48px 24px 28px;
+
+    /* ---- READ ALOUD — always top-right ---- */
+    .read-aloud-bar {
+      display: flex;
+      justify-content: flex-end;
+      padding: 14px 20px 0;
+      position: relative;
+      z-index: 10;
+    }
+
+    .read-aloud-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.15);
+      color: rgba(255,255,255,0.7);
+      border-radius: 20px;
+      padding: 7px 14px;
+      font-size: 13px;
+      font-family: var(--font);
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .read-aloud-btn:hover  { background: rgba(255,255,255,0.14); }
+    .read-aloud-btn.active {
+      background: rgba(78,204,163,0.18);
+      border-color: rgba(78,204,163,0.45);
+      color: #4ecca3;
+    }
+
+    .speaking-indicator {
+      display: none;
+      text-align: center;
+      font-size: 12px;
+      color: #4ecca3;
+      padding: 6px 0 0;
+      animation: pulse 1.4s ease-in-out infinite;
+    }
+    .speaking-indicator.show { display: block; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
+
+    /* ---- SCREENS ---- */
+    .ob-screen {
+      display: none;
+      flex-direction: column;
+      flex: 1;
+      padding: 24px 28px 32px;
+      animation: fadeUp 0.35s ease;
+    }
+    .ob-screen.active { display: flex; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ---- PROGRESS DOTS ---- */
+    .ob-dots {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 28px;
+    }
+    .ob-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.18);
+      transition: background 0.3s, transform 0.3s;
+    }
+    .ob-dot.active { background: #4ecca3; transform: scale(1.35); }
+    .ob-dot.done   { background: rgba(78,204,163,0.4); }
+
+    /* ---- CONTENT ---- */
+    .ob-icon     { font-size: 64px; text-align: center; margin-bottom: 20px; line-height: 1; }
+    .ob-title    { font-size: 24px; font-weight: 600; text-align: center; margin-bottom: 8px; line-height: 1.3; color: white; }
+    .ob-sub      { font-size: 14px; color: rgba(255,255,255,0.6); text-align: center; margin-bottom: 24px; line-height: 1.6; }
+    .ob-body     { font-size: 15px; color: rgba(255,255,255,0.82); line-height: 1.7; margin-bottom: 20px; }
+    .ob-body strong { color: #4ecca3; font-weight: 600; }
+
+    /* ---- TASK CARDS ---- */
+    .ob-tasks    { list-style: none; margin-bottom: 20px; }
+    .ob-task     {
+      display: flex; align-items: flex-start; gap: 14px;
+      padding: 14px 16px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.09);
+      border-radius: 13px;
+      margin-bottom: 10px;
+    }
+    .ob-task-icon { font-size: 26px; flex-shrink: 0; margin-top: 1px; }
+    .ob-task-name { font-size: 15px; font-weight: 600; color: white; margin-bottom: 3px; }
+    .ob-task-desc { font-size: 13px; color: rgba(255,255,255,0.5); line-height: 1.5; }
+
+    /* ---- INFO CARDS ---- */
+    .ob-info {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.09);
+      border-radius: 13px;
+      padding: 16px 18px;
+      margin-bottom: 14px;
+    }
+    .ob-info-title {
+      font-size: 15px; font-weight: 600; color: #4ecca3;
+      display: flex; align-items: center; gap: 8px;
+      margin-bottom: 10px;
+    }
+    .ob-info ul  { list-style: none; padding: 0; }
+    .ob-info li  {
+      font-size: 14px; color: rgba(255,255,255,0.72);
+      padding: 5px 0 5px 16px;
+      position: relative; line-height: 1.5;
+    }
+    .ob-info li::before { content:'·'; position:absolute; left:0; color:#4ecca3; font-weight:bold; }
+
+    /* ---- READY BOX ---- */
+    .ob-ready {
+      background: rgba(78,204,163,0.08);
+      border: 1px solid rgba(78,204,163,0.25);
+      border-radius: 13px;
+      padding: 20px 18px;
+      margin-bottom: 20px;
       text-align: center;
     }
-    .auth-logo {
-      width: 60px; height: 60px;
-      background: var(--accent); color: var(--dark);
-      border-radius: 18px;
-      display: flex; align-items: center; justify-content: center;
-      font-weight: 700; font-size: 20px;
-      margin: 0 auto 16px;
-      box-shadow: 0 8px 24px rgba(78,204,163,0.3);
-    }
-    .auth-header h1 { font-size: 22px; font-weight: 700; color: white; margin-bottom: 4px; }
-    .auth-header p  { font-size: 13px; color: rgba(255,255,255,0.5); line-height: 1.6; }
-    .auth-card {
-      background: rgba(30,45,74,0.8);
-      backdrop-filter: blur(10px);
-      border-radius: 20px;
-      margin: 0 16px;
-      padding: 24px 20px;
-      border: 1px solid rgba(255,255,255,0.1);
-      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
-    }
-    .form-group { margin-bottom: 16px; }
-    .form-label { display: block; font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.8); margin-bottom: 6px; }
-    .form-input, .form-select {
-      width: 100%; padding: 13px 14px;
-      border: 1.5px solid rgba(255,255,255,0.12);
-      border-radius: 12px; font-size: 14px;
+    .ob-ready p { font-size: 15px; color: rgba(255,255,255,0.8); line-height: 1.7; }
+    .ob-ready p + p { margin-top: 10px; }
+
+    /* ---- BUTTONS ---- */
+    .ob-actions { margin-top: auto; padding-top: 16px; }
+
+    .ob-btn-main {
+      display: block; width: 100%; padding: 16px;
+      background: #4ecca3; color: #1a1a2e;
+      border: none; border-radius: 13px;
+      font-size: 16px; font-weight: 600;
       font-family: var(--font);
-      color: white;
-      background: rgba(255,255,255,0.07);
-      transition: border-color 0.2s, box-shadow 0.2s;
-      -webkit-appearance: none;
-    }
-    .form-input:focus, .form-select:focus {
-      outline: none;
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(78,204,163,0.2);
-    }
-    .form-input.error, .form-select.error { border-color: var(--red); }
-    .form-input::placeholder { color: rgba(255,255,255,0.3); }
-    .form-select option { background: #1e2d4a; color: white; }
-    .error-msg {
-      font-size: 12px; color: #fca5a5;
-      background: rgba(239,68,68,0.15);
-      border: 1px solid rgba(239,68,68,0.3);
-      border-radius: 8px; padding: 10px 12px;
-      margin-bottom: 14px; display: none;
-    }
-    .error-msg.show { display: block; }
-    .field-error { font-size: 11px; color: #fca5a5; margin-top: 4px; display: none; }
-    .field-error.show { display: block; }
-    .btn-main, .btn-signup {
-      display: block; width: 100%; padding: 15px;
-      background: var(--accent); color: var(--dark);
-      border: none; border-radius: 12px;
-      font-size: 15px; font-weight: 700;
-      cursor: pointer; font-family: var(--font);
+      cursor: pointer; margin-bottom: 12px;
       transition: opacity 0.2s, transform 0.15s;
-      min-height: 44px;
     }
-    .btn-main:hover, .btn-signup:hover { opacity: 0.88; transform: translateY(-1px); }
-    .btn-signup { width: calc(100% - 32px); margin: 16px 16px 0; }
-    .btn-secondary {
-      display: block; width: 100%; padding: 14px;
-      background: rgba(255,255,255,0.07);
-      color: rgba(255,255,255,0.8);
-      border: 1px solid rgba(255,255,255,0.15);
-      border-radius: 12px; font-size: 15px;
-      cursor: pointer; font-family: var(--font);
-      transition: background 0.2s; min-height: 44px;
+    .ob-btn-main:hover { opacity: 0.88; transform: translateY(-1px); }
+
+    /* Skip — always same spot, centred below main button */
+    .ob-btn-skip {
+      display: block; width: 100%; text-align: center;
+      background: none; border: none;
+      color: rgba(255,255,255,0.35);
+      font-size: 14px; font-family: var(--font);
+      cursor: pointer; padding: 8px;
+      transition: color 0.2s;
     }
-    .btn-secondary:hover { background: rgba(255,255,255,0.12); }
-    .divider { text-align: center; font-size: 12px; color: rgba(255,255,255,0.3); margin: 16px 0; }
-    .auth-footer { text-align: center; font-size: 13px; color: rgba(255,255,255,0.4); margin-top: 16px; }
-    .auth-footer a, .back-link a, .forgot-link { color: var(--accent); font-weight: 500; }
-    .back-link { display: block; text-align: center; font-size: 13px; color: rgba(255,255,255,0.4); margin-top: 12px; }
-    .resend-link { display: block; text-align: center; font-size: 13px; color: var(--accent); font-weight: 500; margin-top: 16px; cursor: pointer; }
-    .remember-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
-    .remember-left { display: flex; align-items: center; gap: 8px; cursor: pointer; }
-    .remember-left input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent); cursor: pointer; }
-    .remember-left label { font-size: 13px; color: rgba(255,255,255,0.7); cursor: pointer; }
-    .remembered-banner {
-      background: rgba(78,204,163,0.1);
-      border: 1px solid rgba(78,204,163,0.3);
-      border-radius: 10px; padding: 10px 14px;
-      margin-bottom: 16px; font-size: 13px; color: var(--accent);
+    .ob-btn-skip:hover { color: rgba(255,255,255,0.65); }
+
+    @media (min-width: 600px) {
+      body { background: #0a0f1e; }
     }
-    .remembered-banner button { float: right; background: none; border: none; font-size: 11px; color: rgba(255,255,255,0.4); cursor: pointer; font-family: var(--font); }
-    .role-section { padding: 20px 16px 0; }
-    .role-label { font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.4); margin-bottom: 12px; }
-    .role-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .role-card {
-      background: rgba(30,45,74,0.6);
-      border: 2px solid rgba(255,255,255,0.1);
-      border-radius: 16px; padding: 18px 12px; text-align: center;
-      cursor: pointer; transition: border-color 0.2s, background 0.2s, transform 0.15s;
-    }
-    .role-card:hover { transform: translateY(-2px); border-color: rgba(255,255,255,0.2); }
-    .role-card.selected { border-color: var(--accent); background: rgba(78,204,163,0.1); }
-    .role-icon  { font-size: 28px; margin-bottom: 6px; }
-    .role-title { font-size: 14px; font-weight: 600; color: white; margin-bottom: 3px; }
-    .role-desc  { font-size: 11px; color: rgba(255,255,255,0.4); line-height: 1.4; }
-    .section-divider { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.3); padding: 12px 0; border-top: 1px solid rgba(255,255,255,0.08); margin-top: 6px; }
-    .select-wrap { position: relative; }
-    .select-wrap::after { content: '▾'; position: absolute; right: 14px; top: 50%; transform: translateY(-50%); color: rgba(255,255,255,0.4); pointer-events: none; }
-    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    @media (max-width: 480px) { .form-row { grid-template-columns: 1fr; } }
-    .code-input {
-      width: 100%; padding: 18px; text-align: center;
-      font-size: 32px; font-weight: 700; letter-spacing: 0.25em;
-      font-family: var(--mono);
-      border: 2px solid rgba(255,255,255,0.15);
-      border-radius: 14px;
-      background: rgba(255,255,255,0.07);
-      color: white; margin-bottom: 6px;
-      transition: border-color 0.2s;
-      /* Remove number input arrows */
-      -moz-appearance: textfield;
-    }
-    .code-input::-webkit-inner-spin-button,
-    .code-input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-    .code-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(78,204,163,0.2); }
-    .form-hint { font-size: 12px; color: rgba(255,255,255,0.35); margin-bottom: 18px; line-height: 1.5; }
-    .proto-notice { background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.3); border-radius: 10px; padding: 12px 14px; margin-bottom: 16px; font-size: 12px; color: #fbbf24; line-height: 1.6; }
-    .success-screen { display: none; padding: 60px 24px; text-align: center; }
-    .success-screen.visible { display: block; }
-    .success-emoji { font-size: 60px; margin-bottom: 14px; }
-    .success-title { font-size: 22px; font-weight: 700; color: white; margin-bottom: 6px; }
-    .success-sub   { font-size: 13px; color: rgba(255,255,255,0.5); line-height: 1.6; margin-bottom: 28px; }
-</style>
+  </style>
 </head>
 <body>
 
-  <!-- SCREEN 1: Welcome -->
+  <!-- READ ALOUD — always top-right on every screen -->
+  <div class="read-aloud-bar">
+    <button class="read-aloud-btn active" id="ra-btn" onclick="toggleReadAloud()">
+      🔊 <span id="ra-label">Stop Reading</span>
+    </button>
+  </div>
+  <div class="speaking-indicator" id="speaking-indicator">🔊 Reading aloud…</div>
+
+  <!-- ============================================================
+       SCREEN 1 — Welcome
+  ============================================================ -->
   <div class="ob-screen active" id="ob-0">
+    <div class="ob-dots">
+      <div class="ob-dot active"></div>
+      <div class="ob-dot"></div>
+      <div class="ob-dot"></div>
+      <div class="ob-dot"></div>
+      <div class="ob-dot"></div>
+    </div>
+
     <div class="ob-icon">🧠</div>
     <h1 class="ob-title">Welcome to NeuroFlex360</h1>
+    <p class="ob-sub">Let's keep your brain sharp.</p>
+
     <p class="ob-body">
-      This app helps you train your brain every day.<br><br>
-      It takes about <strong>10 minutes</strong> per session and works through three simple exercises — memory, attention, and reaction speed.<br><br>
-      We will show you how it works, step by step.
+      This takes about <strong>10 minutes a day</strong> and focuses on three areas:
     </p>
+
+    <ul class="ob-tasks">
+      <li class="ob-task">
+        <div class="ob-task-icon">🧠</div>
+        <div>
+          <div class="ob-task-name">Memory</div>
+          <div class="ob-task-desc">Remembering things</div>
+        </div>
+      </li>
+      <li class="ob-task">
+        <div class="ob-task-icon">🎯</div>
+        <div>
+          <div class="ob-task-name">Focus</div>
+          <div class="ob-task-desc">Staying on task</div>
+        </div>
+      </li>
+      <li class="ob-task">
+        <div class="ob-task-icon">⚡</div>
+        <div>
+          <div class="ob-task-name">Speed</div>
+          <div class="ob-task-desc">Quick thinking</div>
+        </div>
+      </li>
+    </ul>
+
+    <div class="ob-actions">
+      <button class="ob-btn-main" onclick="nextScreen()">Get Started →</button>
+      <button class="ob-btn-skip" onclick="finish()">Skip Introduction</button>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       SCREEN 2 — Memory
+  ============================================================ -->
+  <div class="ob-screen" id="ob-1">
     <div class="ob-dots">
+      <div class="ob-dot done"></div>
       <div class="ob-dot active"></div>
       <div class="ob-dot"></div>
       <div class="ob-dot"></div>
       <div class="ob-dot"></div>
-      <div class="ob-dot"></div>
     </div>
-    <button class="ob-btn" onclick="nextScreen()">Get Started →</button>
-    <button class="ob-skip" onclick="finishOnboarding()">Skip introduction</button>
-  </div>
 
-  <!-- SCREEN 2: Memory -->
-  <div class="ob-screen" id="ob-1">
     <div class="ob-icon">🧠</div>
     <h1 class="ob-title">Memory Training</h1>
-    <div class="ob-card-preview">
-      <div class="ob-card-icon">🃏</div>
-      <div class="ob-card-text">
-        <h4>Card Matching</h4>
-        <p>Flip cards to find matching pairs before the timer runs out</p>
-      </div>
+    <p class="ob-sub">Card matching and pattern recall.</p>
+
+    <ul class="ob-tasks">
+      <li class="ob-task">
+        <div class="ob-task-icon">🃏</div>
+        <div>
+          <div class="ob-task-name">Card Matching</div>
+          <div class="ob-task-desc">Find pairs of matching cards before time runs out.</div>
+        </div>
+      </li>
+      <li class="ob-task">
+        <div class="ob-task-icon">🔢</div>
+        <div>
+          <div class="ob-task-name">Sequence Recall</div>
+          <div class="ob-task-desc">Watch a pattern light up, then repeat it in the same order.</div>
+        </div>
+      </li>
+      <li class="ob-task">
+        <div class="ob-task-icon">📍</div>
+        <div>
+          <div class="ob-task-name">Spatial Memory</div>
+          <div class="ob-task-desc">Remember which squares lit up on the grid, then tap them again.</div>
+        </div>
+      </li>
+    </ul>
+
+    <div class="ob-actions">
+      <button class="ob-btn-main" onclick="nextScreen()">Next →</button>
+      <button class="ob-btn-skip" onclick="finish()">Skip</button>
     </div>
-    <div class="ob-card-preview">
-      <div class="ob-card-icon">🔢</div>
-      <div class="ob-card-text">
-        <h4>Sequence Recall</h4>
-        <p>Watch a pattern light up, then repeat it in the same order</p>
-      </div>
-    </div>
-    <div class="ob-card-preview">
-      <div class="ob-card-icon">📍</div>
-      <div class="ob-card-text">
-        <h4>Spatial Memory</h4>
-        <p>Remember which positions on a grid were highlighted</p>
-      </div>
-    </div>
+  </div>
+
+  <!-- ============================================================
+       SCREEN 3 — Attention
+  ============================================================ -->
+  <div class="ob-screen" id="ob-2">
     <div class="ob-dots">
-      <div class="ob-dot"></div>
+      <div class="ob-dot done"></div>
+      <div class="ob-dot done"></div>
       <div class="ob-dot active"></div>
       <div class="ob-dot"></div>
       <div class="ob-dot"></div>
-      <div class="ob-dot"></div>
     </div>
-    <button class="ob-btn" onclick="nextScreen()">Next →</button>
-    <button class="ob-skip" onclick="finishOnboarding()">Skip introduction</button>
-  </div>
 
-  <!-- SCREEN 3: Attention -->
-  <div class="ob-screen" id="ob-2">
     <div class="ob-icon">🎯</div>
     <h1 class="ob-title">Attention Training</h1>
-    <div class="ob-card-preview">
-      <div class="ob-card-icon">🔢</div>
-      <div class="ob-card-text">
-        <h4>Number Focus</h4>
-        <p>Pick the largest, smallest, even, or odd number from a set</p>
-      </div>
+    <p class="ob-sub">Number focus and visual scanning.</p>
+
+    <ul class="ob-tasks">
+      <li class="ob-task">
+        <div class="ob-task-icon">🔢</div>
+        <div>
+          <div class="ob-task-name">Number Focus</div>
+          <div class="ob-task-desc">Pick the largest, smallest, even, or odd number from a set.</div>
+        </div>
+      </li>
+      <li class="ob-task">
+        <div class="ob-task-icon">🎯</div>
+        <div>
+          <div class="ob-task-name">Target Detection</div>
+          <div class="ob-task-desc">Tap only when you see the target symbol. Ignore everything else.</div>
+        </div>
+      </li>
+      <li class="ob-task">
+        <div class="ob-task-icon">🚦</div>
+        <div>
+          <div class="ob-task-name">Selective Filtering</div>
+          <div class="ob-task-desc">Tap the correct colour and ignore all the distractors.</div>
+        </div>
+      </li>
+    </ul>
+
+    <div class="ob-actions">
+      <button class="ob-btn-main" onclick="nextScreen()">Next →</button>
+      <button class="ob-btn-skip" onclick="finish()">Skip</button>
     </div>
-    <div class="ob-card-preview">
-      <div class="ob-card-icon">🎯</div>
-      <div class="ob-card-text">
-        <h4>Target Detection</h4>
-        <p>Tap only when you see the target — ignore everything else</p>
-      </div>
-    </div>
-    <div class="ob-card-preview">
-      <div class="ob-card-icon">🚦</div>
-      <div class="ob-card-text">
-        <h4>Selective Filtering</h4>
-        <p>Tap the correct colour or shape, ignore distractors</p>
-      </div>
-    </div>
-    <div class="ob-dots">
-      <div class="ob-dot"></div>
-      <div class="ob-dot"></div>
-      <div class="ob-dot active"></div>
-      <div class="ob-dot"></div>
-      <div class="ob-dot"></div>
-    </div>
-    <button class="ob-btn" onclick="nextScreen()">Next →</button>
-    <button class="ob-skip" onclick="finishOnboarding()">Skip introduction</button>
   </div>
 
-  <!-- SCREEN 4: Difficulty + Streak -->
+  <!-- ============================================================
+       SCREEN 4 — Adaptive + Streak
+  ============================================================ -->
   <div class="ob-screen" id="ob-3">
+    <div class="ob-dots">
+      <div class="ob-dot done"></div>
+      <div class="ob-dot done"></div>
+      <div class="ob-dot done"></div>
+      <div class="ob-dot active"></div>
+      <div class="ob-dot"></div>
+    </div>
+
     <div class="ob-icon">⬆️</div>
     <h1 class="ob-title">It Adjusts to You</h1>
-    <p class="ob-body">
-      The app watches how you perform and changes the difficulty automatically.<br><br>
-      Do well two sessions in a row and it gets <strong>harder</strong>.<br>
-      Find it difficult and it <strong>eases off</strong>.<br><br>
-      You always see your current level on each module card.
-    </p>
-    <div class="ob-level-demo">📊 Currently: Level 1 · Easy</div>
-    <p class="ob-body" style="margin-bottom:0;">
-      Train every day to build a <strong>streak 🔥</strong>. The longer your streak, the better your habit.
-    </p>
-    <div class="ob-dots">
-      <div class="ob-dot"></div>
-      <div class="ob-dot"></div>
-      <div class="ob-dot"></div>
-      <div class="ob-dot active"></div>
-      <div class="ob-dot"></div>
+
+    <div class="ob-info">
+      <div class="ob-info-title">⬆️ Automatic difficulty</div>
+      <ul>
+        <li>Do well two sessions in a row and it gets a little harder.</li>
+        <li>Struggle and it eases back down to help you out.</li>
+        <li>You never need to change anything — it happens on its own.</li>
+      </ul>
     </div>
-    <button class="ob-btn" onclick="nextScreen()">Next →</button>
-    <button class="ob-skip" onclick="finishOnboarding()">Skip introduction</button>
+
+    <div class="ob-info">
+      <div class="ob-info-title">🔥 Daily Streak</div>
+      <ul>
+        <li>Play every day to build your streak.</li>
+        <li>Each day you train, your flame grows.</li>
+        <li>Even one short session keeps it going.</li>
+      </ul>
+    </div>
+
+    <div class="ob-actions">
+      <button class="ob-btn-main" onclick="nextScreen()">Next →</button>
+      <button class="ob-btn-skip" onclick="finish()">Skip</button>
+    </div>
   </div>
 
-  <!-- SCREEN 5: Ready -->
+  <!-- ============================================================
+       SCREEN 5 — Ready
+  ============================================================ -->
   <div class="ob-screen" id="ob-4">
-    <div class="ob-icon">✅</div>
-    <h1 class="ob-title">You are ready!</h1>
-    <p class="ob-body">
-      Tap any module on the home screen to begin your first session.<br><br>
-      Each module has simple instructions at the top of the screen — you do not need to memorise anything now.<br><br>
-      Take your time. There is no rush.
-    </p>
     <div class="ob-dots">
-      <div class="ob-dot"></div>
-      <div class="ob-dot"></div>
-      <div class="ob-dot"></div>
-      <div class="ob-dot"></div>
+      <div class="ob-dot done"></div>
+      <div class="ob-dot done"></div>
+      <div class="ob-dot done"></div>
+      <div class="ob-dot done"></div>
       <div class="ob-dot active"></div>
     </div>
-    <button class="ob-btn" onclick="finishOnboarding()">Start Training 🧠</button>
+
+    <div class="ob-icon">✅</div>
+    <h1 class="ob-title">You are Ready!</h1>
+
+    <div class="ob-ready">
+      <p>You do not need to remember any of this.</p>
+      <p>Every game shows simple instructions at the top when you play.</p>
+      <p>Tap any module on your home screen to begin.</p>
+      <p>Take your time. Enjoy the practice. 😊</p>
+    </div>
+
+    <div class="ob-actions">
+      <button class="ob-btn-main" onclick="finish()">Go to Home Screen →</button>
+    </div>
   </div>
 
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="js/firebase-config.js"></script>
   <script src="js/auth.js"></script>
   <script>
-    var currentScreen = 0;
-    var totalScreens  = 5;
+    var current = 0;
+    var synth   = window.speechSynthesis;
 
-    function nextScreen() {
-      var current = document.getElementById('ob-' + currentScreen);
-      current.classList.remove('active');
-      currentScreen++;
-      var next = document.getElementById('ob-' + currentScreen);
-      if (next) next.classList.add('active');
+    // Auto-read is ON by default — elderly users don't need to do anything
+    var raOn = true;
+
+    // ---- READ ALOUD ----
+    function toggleReadAloud() {
+      raOn = !raOn;
+      var btn   = document.getElementById('ra-btn');
+      var label = document.getElementById('ra-label');
+      btn.classList.toggle('active', raOn);
+      label.textContent = raOn ? 'Stop Reading' : 'Read Aloud';
+      if (!raOn) {
+        synth.cancel();
+        document.getElementById('speaking-indicator').classList.remove('show');
+      } else {
+        readScreen();
+      }
     }
 
-    function finishOnboarding() {
-      // Mark onboarding as complete for this user so it never shows again
-      var user = getCurrentUser();
-      if (user) {
-        localStorage.setItem('nf360_onboarded_' + user.id, 'true');
+    function readScreen() {
+      if (!raOn) return;
+      synth.cancel();
+      var screen = document.getElementById('ob-' + current);
+      if (!screen) return;
+      var parts = [];
+      screen.querySelectorAll('.ob-title,.ob-sub,.ob-body,.ob-task-name,.ob-task-desc,.ob-info-title,.ob-info li,.ob-ready p')
+        .forEach(function(el) { var t = el.innerText.trim(); if (t) parts.push(t); });
+      if (!parts.length) return;
+      var utt   = new SpeechSynthesisUtterance(parts.join('. '));
+      utt.rate  = 0.85;  // slightly slower for comfort
+      utt.lang  = 'en-GB';
+      var ind   = document.getElementById('speaking-indicator');
+      utt.onstart = function() { ind.classList.add('show'); };
+      utt.onend   = function() { ind.classList.remove('show'); };
+      utt.onerror = function() { ind.classList.remove('show'); };
+      synth.speak(utt);
+    }
+
+    // ---- NAVIGATION ----
+    function nextScreen() {
+      synth.cancel();
+      document.getElementById('speaking-indicator').classList.remove('show');
+      document.getElementById('ob-' + current).classList.remove('active');
+      current++;
+      var next = document.getElementById('ob-' + current);
+      if (next) {
+        next.classList.add('active');
+        // Short pause so the screen animation finishes before speaking
+        if (raOn) setTimeout(readScreen, 500);
       }
+    }
+
+    function finish() {
+      synth.cancel();
+      markOnboardingComplete();
       window.location.href = 'index.html';
     }
+
+    // Start reading the first screen automatically on load
+    // Small delay because some browsers need a user gesture first.
+    // If auto-read is blocked by the browser, the button still works.
+    window.addEventListener('DOMContentLoaded', function() {
+      if (!window.speechSynthesis) {
+        document.getElementById('ra-btn').style.display = 'none';
+        return;
+      }
+      // Try auto-read after a short pause
+      setTimeout(readScreen, 800);
+    });
   </script>
 </body>
 </html>
