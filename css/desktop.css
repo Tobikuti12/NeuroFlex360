@@ -1,0 +1,260 @@
+/* =========================================
+   NeuroFlex360 — Desktop Layout
+   =========================================
+   MOBILE  (< 1024px) : Zero changes. style.css
+                        handles everything as before.
+   DESKTOP (≥ 1024px) : Sidebar nav + wide content
+                        + right stats panel.
+   AUTH    (≥ 768px)  : Centered card column.
+   welcome.html        : NOT touched at all.
+   ========================================= */
+
+
+/* =============================================
+   1. REMOVE THE 480px PHONE COLUMN ON DESKTOP
+   ============================================= */
+@media (min-width: 1024px) {
+
+  html { background: #07101f; }
+
+  body {
+    max-width: 100%;
+    margin: 0;
+    padding: 0;
+    background: #07101f;
+    box-shadow: none;
+    /* shift all content right so sidebar has room */
+    padding-left: 220px;
+    padding-bottom: 0;
+  }
+
+  /* kill the body > * 480px cap set in some inner pages */
+  body > * {
+    max-width: 100%;
+    width: 100%;
+  }
+}
+
+
+/* =============================================
+   2. SIDEBAR — replaces bottom nav on desktop
+   ============================================= */
+@media (min-width: 1024px) {
+
+  .bottom-nav {
+    /* unpin from bottom, pin to left */
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: auto;
+    width: 220px;
+    max-width: 220px;
+    height: 100vh;
+
+    /* stack items top-to-bottom */
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    padding: 0 0 24px;
+
+    /* look */
+    background: #0c1525;
+    border-top: none;
+    border-right: 1px solid rgba(255,255,255,0.07);
+    transform: none;
+    z-index: 300;
+    overflow-y: auto;
+  }
+
+  /* NF logo at top */
+  .bottom-nav::before {
+    content: 'NF';
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    background: #4ecca3;
+    color: #0f1729;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 15px;
+    letter-spacing: 0.04em;
+    margin: 24px auto 20px;
+    flex-shrink: 0;
+  }
+
+  /* Nav items become horizontal rows */
+  .nav-item {
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 11px;
+    padding: 11px 18px;
+    font-size: 14px;
+    margin: 2px 10px;
+    border-radius: 9px;
+    min-height: auto;
+  }
+
+  .nav-item:hover  { background: rgba(255,255,255,0.05); }
+  .nav-item.active { background: rgba(78,204,163,0.12); color: #4ecca3; }
+  .nav-icon        { font-size: 17px; flex-shrink: 0; }
+}
+
+
+/* =============================================
+   3. DASHBOARD — index.html
+   ============================================= */
+@media (min-width: 1024px) {
+
+  /* App shell sits in the content column */
+  .app-shell {
+    display: grid;
+    grid-template-columns: 1fr 200px;
+    grid-template-rows: auto auto 1fr;
+    min-height: 100vh;
+  }
+
+  /* Header spans full width */
+  .app-header {
+    grid-column: 1 / -1;
+    padding: 22px 40px;
+  }
+
+  /* Progress bar spans full width */
+  .daily-progress-section {
+    grid-column: 1 / -1;
+    padding: 12px 40px;
+  }
+
+  /* Module cards — main column */
+  .modules-container {
+    grid-column: 1;
+    padding: 28px 32px 28px 40px;
+  }
+
+  /* 2-column module card grid */
+  .modules-list {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+
+  .module-card {
+    margin-bottom: 0;
+    padding: 18px;
+  }
+
+  .card-icon { width: 52px; height: 52px; font-size: 26px; }
+
+  /* Right stats panel */
+  .dash-stats {
+    grid-column: 2;
+    grid-row: 3;
+    background: #111d35;
+    border-left: 1px solid rgba(255,255,255,0.06);
+    padding: 24px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  /* Bottom nav doesn't take grid space */
+  .app-shell > .bottom-nav {
+    display: flex; /* sidebar handles itself via fixed positioning */
+  }
+
+  /* Modal stays centered over full viewport */
+  .modal-backdrop { left: 0; width: 100vw; }
+}
+
+
+/* =============================================
+   4. INNER APP PAGES — progress, profile,
+      reaction, memory, attention
+   ============================================= */
+@media (min-width: 1024px) {
+
+  /* page-wrap used by profile.html */
+  .page-wrap {
+    max-width: 100%;
+    min-height: 100vh;
+  }
+
+  .page-header        { padding: 24px 48px 20px; }
+  .game-area          { padding: 28px 48px; max-width: 760px; }
+  .result-screen      { padding: 40px 48px; max-width: 620px; margin: 0 auto; }
+
+  /* Progress page */
+  .summary-section    { padding: 24px 48px; }
+  .summary-grid       { gap: 18px; }
+  .module-section     { padding: 20px 48px; }
+  .chart-section      { padding: 16px 48px 32px; }
+  .clinician-section  { padding: 20px 48px 48px; }
+
+  /* Profile page */
+  .profile-header     { padding: 32px 48px; }
+  .profile-section    { padding: 18px 48px; }
+
+  /* Reaction — bigger circle */
+  .rt-circle          { width: 220px; height: 220px; }
+
+  /* Memory — centred grid */
+  .memory-grid        { max-width: 540px; margin: 0 auto; gap: 14px; }
+
+  /* Attention — centred question + choices */
+  .question-box       { max-width: 500px; margin: 0 auto 20px; }
+  .choices-grid       { max-width: 500px; margin: 0 auto 16px; }
+}
+
+
+/* =============================================
+   5. AUTH PAGES — login, signup, forgot,
+      verify-email, reset-password
+      Centered card at 768px+. Mobile unchanged.
+   ============================================= */
+@media (min-width: 768px) {
+
+  body.auth-page {
+    max-width: 100%;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 48px 24px;
+    background: linear-gradient(135deg, #0f1729 0%, #16213e 50%, #0f3460 100%);
+  }
+
+  /* Single centered column that holds everything */
+  body.auth-page .auth-col {
+    width: 100%;
+    max-width: 500px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  body.auth-page .auth-col .auth-header {
+    padding-top: 0;
+    width: 100%;
+  }
+
+  body.auth-page .auth-col .auth-card {
+    margin: 0;
+    width: 100%;
+  }
+
+  /* signup: btn-signup sits outside auth-card */
+  body.auth-page .auth-col .btn-signup {
+    width: 100%;
+    margin: 16px 0 0;
+  }
+
+  body.auth-page .auth-col .auth-footer,
+  body.auth-page .auth-col .back-link,
+  body.auth-page .auth-col > p {
+    text-align: center;
+    margin-top: 12px;
+  }
+}

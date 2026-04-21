@@ -14,7 +14,7 @@
     /* ---- RESPONSIVE ---- */
     @media (min-width: 600px) {
       .app-shell {
-        max-width: 480px;
+        max-width: 100%;
         margin: 0 auto;
         min-height: 100vh;
         box-shadow: 0 0 60px rgba(0,0,0,0.5);
@@ -78,6 +78,7 @@
     }
     .score-loaded { animation: scoreAppear 0.4s ease both; }
   </style>
+  <link rel="stylesheet" href="css/desktop.css" />
 </head>
 <body>
 <div class="app-shell">
@@ -111,6 +112,7 @@
   <!-- MODULE CARDS -->
   <main class="modules-container">
     <h2 class="section-label">Training Modules</h2>
+    <div class="modules-list">
 
     <a href="pages/memory.html" class="module-card memory-card">
       <div class="card-icon">🧠</div>
@@ -159,6 +161,7 @@
         <div id="rt-level-badge" style="font-size:10px; color:var(--text2); margin-top:3px;"></div>
       </div>
     </a>
+    </div><!-- end modules-list -->
   </main>
 
   <!-- BOTTOM NAV -->
@@ -196,6 +199,18 @@
     </div>
   </div>
 
+
+  <!-- DESKTOP STATS PANEL -->
+  <aside class="dash-stats">
+    <div style="font-size:11px;font-weight:600;letter-spacing:0.08em;color:rgba(255,255,255,0.35);text-transform:uppercase;margin-bottom:4px;">Overall score</div>
+    <div id="dash-overall" style="font-size:28px;font-weight:600;color:#4ecca3;">--</div>
+    <div style="font-size:11px;color:rgba(255,255,255,0.3);margin-top:2px;">across all modules</div>
+
+    <div style="margin-top:4px;font-size:11px;font-weight:600;letter-spacing:0.08em;color:rgba(255,255,255,0.35);text-transform:uppercase;margin-bottom:8px;">Recent activity</div>
+    <div id="dash-activity" style="display:flex;flex-direction:column;gap:8px;">
+      <div style="font-size:12px;color:rgba(255,255,255,0.3);">No sessions yet</div>
+    </div>
+  </aside>
 </div><!-- end app-shell -->
 
 <!-- Firebase SDKs -->
@@ -251,6 +266,36 @@
     updateModuleCards();
     updateProgressBar();
     updateStreakBadge();
+    updateStatsPanel();
+  }
+
+  function updateStatsPanel() {
+    var scores = _cachedScores;
+    var totals = [], activity = [];
+
+    var mem = scores.memory || [];
+    var att = scores.attention || [];
+    var rt  = scores.reaction || [];
+
+    if (mem.length) { totals.push(mem[mem.length-1].score); activity.push({ name:'Memory', score: mem[mem.length-1].score, color:'#378add' }); }
+    if (att.length) { totals.push(att[att.length-1].score); activity.push({ name:'Attention', score: att[att.length-1].score, color:'#f59e0b' }); }
+    if (rt.length)  { activity.push({ name:'Reaction', score: rt[rt.length-1].score + 'ms', color:'#4ecca3' }); totals.push(Math.round((800 - rt[rt.length-1].score) / 6.5)); }
+
+    var overallEl = document.getElementById('dash-overall');
+    if (overallEl && totals.length) {
+      overallEl.textContent = Math.round(totals.reduce(function(a,b){return a+b;},0) / totals.length);
+    }
+
+    var actEl = document.getElementById('dash-activity');
+    if (actEl && activity.length) {
+      actEl.innerHTML = activity.map(function(a) {
+        return '<div style="display:flex;align-items:center;gap:8px;font-size:12px;">' +
+          '<div style="width:8px;height:8px;border-radius:50%;background:' + a.color + ';flex-shrink:0;"></div>' +
+          '<span style="color:rgba(255,255,255,0.55);flex:1;">' + a.name + '</span>' +
+          '<span style="color:rgba(255,255,255,0.85);font-weight:500;">' + a.score + '</span>' +
+          '</div>';
+      }).join('');
+    }
   }
 
   function updateModuleCards() {
